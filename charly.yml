@@ -250,7 +250,7 @@ agents-skill:
                     unified `charly status` surface. It runs no beds — every substrate bed is
                     disqualified from sub-agent ownership (`check-pod` measured ≥600s,
                     `check-k3s-vm` is a VM bed, `check-android-emulator-pod` is an android
-                    bed, `check-local` is host-local), so a runner form would be invalid by
+                    bed, `check-local-vm` is a VM bed and the `check-*-local` beds are host-local), so a runner form would be invalid by
                     construction. It emits, per substrate, the exact `charly check run <bed>`
                     command, the `summary.yml` path to read, and the `status-shows-*`
                     deploy-scope assertion that bed proves; the persistent session owns each
@@ -982,7 +982,7 @@ agents-skill:
                   an exemption from it:
 
                   - **Partition the parallel work by check bed.** One disjoint disposable bed
-                    per parallel owner (`check-pod` / `check-k3s-vm` / `check-local` /
+                    per parallel owner (`check-pod` / `check-k3s-vm` / `check-local-vm` /
                     `check-android-emulator-pod` / …). Distinct beds get distinct
                     `charly-<bed>` container/VM/domain names, and a bed run tags every
                     fixture image it builds with a per-run `<bed-root>-<runCalver>` tag, so
@@ -1537,7 +1537,7 @@ agents-skill:
                      (never a teammate that authored code) validates and merges it.
                      Teammates never commit, push, or merge.
 
-                  Worked partition (illustrative): A → `{check-pod, check-local}`, B →
+                  Worked partition (illustrative): A → `{check-pod, check-local-vm}`, B →
                   `{check-jupyter-pod, check-versa-pod}`, C → `{check-k3s-vm}` (VM, needs the
                   libvirt user session), D → `{check-sway-browser-vnc-pod}` (heavy). All
                   concurrent → multiple pods and a VM live at once; wall-clock is roughly the
