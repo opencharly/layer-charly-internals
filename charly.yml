@@ -22,7 +22,8 @@ agents-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Multi-agent support in OpenCharly across agent harnesses (Claude Code, Codex, Kimi) — sub-agents, dynamic workflows, agent teams, fresh validator sessions, and how each drives the existing `charly check` disposable beds to test and verify. MUST be invoked before authoring or invoking an charly sub-agent / dynamic workflow / agent team / fresh validator session, wiring agent-lifecycle hooks, or asking "which primitive should drive the R10 beds?".
+            Multi-agent support across harnesses (Claude Code, Codex, Kimi) — sub-agents, dynamic workflows, agent teams, fresh validator sessions, and how each drives the `charly check` disposable beds. Use before authoring/invoking a sub-agent, dynamic workflow, agent team, or fresh validator session, or wiring agent-lifecycle hooks.
+
         triggers:
             - "Verify a cutover by running the R10 beds (drive `charly check run <bed>`)"
             - "Evaluate/audit a deployment config (image or deploy, yours)"
@@ -1763,7 +1764,8 @@ capabilities-skill:
         family: internals
         owner: charly-internals
         description: |-
-            MUST be invoked before any work involving: OCI label contract, Capabilities / BoxMetadata struct, CapabilityLabelMap completeness check, LabelService structured round-trip, source-less deploy via `charly fleet from-box`, or adding a new OCI label. Developer-facing; users author via `/charly-image:layer` and `/charly-image:image`.
+            OCI label contract, Capabilities/BoxMetadata struct, CapabilityLabelMap completeness, LabelService round-trip, source-less deploy via `charly fleet from-box`, or adding an OCI label. Use before any of those.
+
         triggers:
             - "OCI labels / capabilities contract"
         content: |
@@ -1914,11 +1916,8 @@ cloud-init-renderer-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Pure renderer from VmSpec + VmCloudInit to NoCloud seed ISO (user-data +
-            meta-data + network-config). Covers composeUsers adopt-merge, SMBIOS vs
-            cloud_init additive channels, xorriso ISO emission, and charly_install.strategy
-            state machine. Source: sdk/vmshared/cloud_init_render.go, sdk/vmshared/cloud_init_iso.go, spec/exec/charly_install.go.
-            MUST be invoked before editing cloud-init emission paths.
+            Pure renderer from VmSpec + VmCloudInit to NoCloud seed ISO (user-data + meta-data + network-config). Covers composeUsers adopt-merge, SMBIOS vs cloud_init channels, xorriso ISO emission, charly_install.strategy. Use before editing cloud-init emission paths.
+
         content: |
             # cloud-init-renderer
 
@@ -2116,13 +2115,8 @@ cutover-policy-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Authoritative reference for the "Hard Cutover by Default" policy governing
-            schema changes, API renames, and deprecations. Forbidden patterns, required
-            deliverables, rationale, examples from this repo, and the no-exception
-            enforcement: plans are authored as full-scope single-phase cutovers and
-            executed end-to-end regardless of estimated time, context, or scope.
-            MUST be invoked when planning or reviewing any breaking change to Go types,
-            YAML field names, CLI flags, or OCI labels.
+            The 'Hard Cutover by Default' policy for schema changes, API renames, and deprecations — forbidden patterns, required deliverables, rationale, examples. Use when planning or reviewing a breaking change.
+
         triggers:
             - "Hard-cutover concerns / rename sweeps"
         content: |
@@ -2285,14 +2279,8 @@ disposable-skill:
         family: internals
         owner: charly-internals
         description: |-
-            `disposable: true` is the ONE and ONLY authorization for autonomous
-            destroy + rebuild via `charly update`. MUST be invoked before any task
-            involving `charly update`, live verification on rebuildable targets, or
-            marking a VM / container deploy as safe-to-nuke. Explains why
-            disposability is a DEPLOY property (not an image property), the
-            separation between load-bearing `disposable:` and informational
-            `lifecycle:`, why derivation is deliberately absent, and how the
-            flag makes live verification fearless on shared hosts.
+            `disposable: true` is the ONE and ONLY authorization for autonomous destroy + rebuild via `charly update`. Use before any task involving `charly update`, live verification on rebuildable targets, or marking a VM/container deploy safe-to-nuke.
+
         triggers:
             - "Disposable-flag semantics / `disposable: true` authorization / preemptible-flag / `requires_exclusive:` / `charly preempt` / exclusive host-resource arbitration (GPU passthrough contention)"
         content: |
@@ -2720,13 +2708,8 @@ egress-skill:
         family: internals
         owner: charly-internals
         description: |-
-            CUE EGRESS validation — validating (and, where it adds value, generating) the
-            config files charly WRITES to a system BEFORE the bytes hit disk. MUST be
-            invoked before working on candy/plugin-fleet/egress.go, the vendored schemas under
-            candy/plugin-egress/egress-schemas/vendor/, the ValidateEgress / registerVendoredEgressKind path,
-            the offline CUE vendoring pipeline, or adding an egress schema for any
-            written artifact (cloud-init, kubernetes manifests, traefik routes, runtime config,
-            install ledger, systemd/quadlet units, ssh_config, libvirt XML).
+            CUE EGRESS validation — validating (and where valuable, generating) the config files charly WRITES to a system before the bytes hit disk. Use before working on candy/plugin-fleet/egress.go, the vendored egress schemas, ValidateEgress, or adding an egress schema.
+
         triggers:
             - "Egress config validation \u2014 validating/generating the config files charly WRITES to a system (`candy/plugin-fleet/egress.go`, `ValidateEgress`, the vendored CUE egress schemas in `candy/plugin-egress/egress-schemas/vendor/`, cloud-init/k8s_object/units/ssh_config/libvirt-XML egress)"
         content: |
@@ -2934,10 +2917,8 @@ generate-source-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Containerfile generation: understanding charly box generate output, multi-stage builds,
-            intermediate images, and the .build/ directory. Use when debugging or understanding
-            generated Containerfiles.
-            MUST be invoked before reading or modifying any Go source file in charly/.
+            Containerfile generation: `charly box generate` output, multi-stage builds, intermediate images, the .build/ directory. Use when debugging/understanding generated Containerfiles or reading charly Go source.
+
         triggers:
             - "`charly box build` / `charly box generate` / Containerfile"
         content: |
@@ -3509,15 +3490,8 @@ git-workflow-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Use when committing, branching, pushing, opening PRs, or landing a change with
-            gh — the feat/-branch, R10-gated, PR-ONLY, org-workflow-validated, never-force-push
-            landing across the main repo, its box submodules, the marketplace repo, and the
-            proxy-resolved sdk contract module (no submodule — consumed at the pinned
-            go.mod require). A direct push to main is FORBIDDEN and mechanically disabled; the
-            org-wide `charly/pr-validator` GitHub Actions gate validates the PR and, on PASS,
-            its `auto-merge` companion squash-merges and tags. Covers
-            sync-to-upstream, branch/worktree pruning, the fork+PR path, cross-repo @github
-            landing order, and the CalVer-generated-at-merge rule.
+            The feat/-branch, R10-gated, PR-ONLY, org-workflow-validated, never-force-push landing across the main repo, box submodules, marketplace, and the proxy-resolved sdk contract module. Use when committing, branching, pushing, opening PRs, or landing with gh; covers sync-to-upstream, fork+PR, cross-repo @github order, CalVer-at-merge.
+
         triggers:
             - "Git/`gh` workflow \u2014 `feat/` branch, commit, PR-only landing (NO direct push to main), branch protection, the `pr-validator` fresh-evaluator gate, native auto-merge + tag-on-merge CalVer-at-merge, worktree, sync-to-upstream, branch/worktree prune, cross-repo R10 landing"
         content: |
@@ -5285,12 +5259,8 @@ go-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Go CLI development: building the charly binary, running tests, understanding
-            the source code structure. Owns the Schema Driven Design (SDD)
-            operationalization — the spec/schema/*.cue → `task cue:gen` generation pipeline
-            and the generation-coverage current state.
-            MUST be invoked before reading or modifying any Go source file in charly/
-            or any spec/schema/*.cue schema file.
+            Go CLI development: building the charly binary, running tests, source structure, and the SDD operationalization (spec/schema/*.cue -> `task cue:gen`). Use before reading/modifying charly Go source or spec/schema/*.cue.
+
         triggers:
             - "Go source work (adding/modifying `charly` commands)"
             - "Editing `sdk/schema/*.cue` / `task cue:gen` / `cue exp gengotypes` / generated `cue_types_gen.go` / Schema Driven Design (SDD) / a schema spike"
@@ -6129,13 +6099,8 @@ go-quality-skill:
         family: internals
         owner: charly-internals
         description: |-
-            How to check charly's Go source for CLAUDE.md compliance + code quality and fix what's
-            found. Covers golangci-lint v2 (the deterministic backbone) + the charly/.golangci.yml
-            linter set, gopls, go vet, gofmt; the .go compliance checklist (R3 duplication, R4 ad-hoc
-            workarounds, R5 dead/stale paths, repo invariants); the legitimate-pattern allowlist that
-            kills false positives; triage + adversarial verification; and how to fix findings as a
-            handful of large thematic R10-gated cutovers. MUST be invoked before any Go code-quality
-            audit, golangci-lint run, dupl/duplication check, or CLAUDE.md-compliance sweep of charly/.
+            Check charly's Go source for CLAUDE.md compliance + code quality: golangci-lint v2, gopls, go vet, gofmt, the .go compliance checklist (R3/R4/R5), the legitimate-pattern allowlist. Use before a Go code-quality audit or lint sweep.
+
         triggers:
             - "Go code-quality / CLAUDE.md-compliance audit / `golangci-lint` / `dupl` / duplication or dead-code check / `.golangci.yml`"
         content: |
@@ -6399,13 +6364,8 @@ install-plan-skill:
         family: internals
         owner: charly-internals
         description: |-
-            InstallPlan is the shared deployment IR. Use for the external local, VM, pod,
-            Kubernetes, and Android deploy targets; executor reverse-channel walking;
-            host-engine steps; guest SSH execution; pod overlay builds; Kustomize
-            generation; Containerfile emission; deploy wire types; or any new step,
-            target, or reverse operation. MUST be invoked before changing the InstallPlan,
-            build target, external deploy target, lifecycle preresolution, overlay,
-            Kubernetes generation, or SDK deploy-wire implementation.
+            InstallPlan is the shared deployment IR — external local/VM/pod/Kubernetes/Android targets, executor reverse-channel, host-engine steps, guest SSH, pod overlays, Kustomize, Containerfile emission, deploy wire types. Use before changing the InstallPlan or any deploy target.
+
         triggers:
             - "IR / InstallPlan / EmitTarget / OCITarget"
         content: |
@@ -6959,13 +6919,8 @@ libvirt-renderer-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Translation facade from VmSpec + LibvirtDomain to libvirt domain XML (via the
-            libvirtxml library) and QEMU argv. Covers RenderDomainXML, device emission (passt
-            backend, portForward attribute order, virtio-gpu defaults), firmware plumbing, and
-            LibvirtDomain schema shape.
-            Source: sdk/vmshared/libvirt_yaml.go, plugin-vm/candy/plugin-vm/libvirt_yaml_bridge.go,
-            sdk/vmshared/libvirt_helpers.go, sdk/vmshared/qemu_render.go.
-            MUST be invoked before editing libvirt XML emission.
+            Translation facade from VmSpec + LibvirtDomain to libvirt domain XML and QEMU argv — RenderDomainXML, device emission (passt, portForward, virtio-gpu), firmware plumbing, LibvirtDomain schema. Use before editing libvirt XML emission.
+
         content: |
             # libvirt-renderer
 
@@ -7202,14 +7157,8 @@ local-infra-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Go file map for the host side of the `local:` (external deploy:local plugin) +
-            VM deploy execution surface. Files: deploy_chain.go,
-            sdk/kit/sshconfig.go, sdk/vmshared/hostdistro.go, install_ledger.go, builder_run.go,
-            shell_profile.go, reverse_ops.go, candy/plugin-fleet/deploy_ref.go (the former
-            `charly/deploy_ref.go` is DELETED, K-wave 2).
-            MUST be invoked before reading or modifying any of those files, or when
-            debugging `local:` / VM deploy behaviour (ledger state, sudo batching,
-            managed-block insertion, glibc preflight, ssh-config fragment, ref resolution).
+            Go file map for the host side of `local:` + VM deploy execution — deploy_chain.go, sshconfig, hostdistro, install_ledger, builder_run, reverse_ops, deploy_ref. Use before reading/modifying those files or debugging local/VM deploy.
+
         triggers:
             - "local-target deploy / `target: local` / `host: local` (default) / SSH-host deploys / `user:` / `ssh_arg:`"
         content: |
@@ -7279,11 +7228,8 @@ ovmf-skill:
         family: internals
         owner: charly-internals
         description: |-
-            UEFI firmware (OVMF_CODE + OVMF_VARS) path resolution for VMs. Covers the
-            per-distro path table (Fedora vs Arch vs Debian/Ubuntu), per-VM NVRAM copies
-            pattern, secure-boot variants, and the "empty strings = skip loader/nvram"
-            contract for firmware: bios. Source: sdk/vmshared/ovmf_paths.go.
-            MUST be invoked before editing UEFI firmware resolution.
+            UEFI firmware (OVMF_CODE + OVMF_VARS) path resolution for VMs — per-distro path table, per-VM NVRAM copies, secure-boot variants, the empty-strings=skip contract. Use before editing UEFI firmware resolution.
+
         content: |
             # ovmf
 
@@ -7377,10 +7323,8 @@ plugin-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Use when authoring or modifying a charly PLUGIN — a candy with a `plugin:` block that contributes
-            Providers (verbs/kinds/deploy-targets/steps/builders/commands), its own CUE schema, builtin (compiled-in) or
-            external (out-of-tree git repo). Covers the unified Provider model, the per-plugin CUE-schema contract
-            (single source → Go params for dev + schema-over-Describe RPC for runtime), the SDK, and the loader.
+            Authoring/modifying a charly PLUGIN — a candy with a `plugin:` block contributing Providers (verbs/kinds/deploy-targets/steps/builders/commands), its CUE schema, builtin or external. Covers the unified Provider model, per-plugin CUE-schema contract, SDK, loader.
+
         triggers:
             - "Authoring a plugin (a candy with a `plugin:` block) / builtin vs out-of-tree plugin / per-plugin `.cue` schema (single source \u2192 `gengotypes` for dev + schema-over-`Describe` RPC at runtime) / the plugin SDK (`github.com/opencharly/sdk`, the proxy-resolved contract module — no submodule) / `sdk/**` / a compiled-in plugin candy (`compiled_plugins:`) or host-coupled kit candy / an external plugin module"
             - "Editing `sdk/schema/*.cue` / `task cue:gen` / `cue exp gengotypes` / generated `cue_types_gen.go` / Schema Driven Design (SDD) / a schema spike"
@@ -8119,9 +8063,8 @@ root-cause-analyzer-skill:
         family: internals
         owner: charly-internals
         description: |-
-            R1 mandatory failure analysis agent. MUST be invoked before any remediation
-            when an unexpected error, warning, or anomaly occurs. Performs the 8-step
-            root cause analysis process.
+            R1 mandatory failure analysis — the 8-step root cause analysis process. MUST be invoked before any remediation when an unexpected error, warning, or anomaly occurs.
+
         content: |
             # Root Cause Analyzer
 
@@ -8168,8 +8111,8 @@ skills-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Skill maintenance guidelines: when and how to update skills, root rulebooks, and README.md.
-            Use when updating documentation, feeding back operational insights, or auditing skill coverage.
+            Skill maintenance: when and how to update skills, root rulebooks, and README.md. Use when updating documentation, feeding back operational insights, or auditing skill coverage.
+
         triggers:
             - "Skill authoring / skill maintenance / where does this doc content belong"
         content: |
@@ -8382,10 +8325,9 @@ skills-skill:
             ```markdown
             ---
             name: <skill-name>
-            description: |
-              One-sentence description of when to invoke this skill.
-              For layers: "Use when working with <component>."
-              For images: "MUST be invoked before building, deploying, or troubleshooting the <image> image."
+            description: |-
+                Skill maintenance: when and how to update skills, root rulebooks, and README.md. Use when updating documentation, feeding back operational insights, or auditing skill coverage.
+
             ---
 
             # <Title>
@@ -8674,20 +8616,8 @@ vm-deploy-target-skill:
         family: internals
         owner: charly-internals
         description: |-
-            The external VM deploy substrate applies InstallPlan inside a guest through
-            the reverse-channel SSH executor. Use for plugin-deploy-vm, VM boot and guest
-            readiness, Charly delivery, nested pods, lifecycle preparation and teardown,
-            VmDeployState persistence, DeployExecutor, or the
-            generic pluginDeployTarget and UnifiedDeployTarget seams (S3b:
-            candy/plugin-fleet's Invoke(OpDeployDispatch), replacing the deleted
-            grpcSubstrateLifecycle/externalDeployTarget).
-            SSHExecutor, VmDeployState persistence, and the host-side ledger.
-            Source: plugin-deploy-vm/candy/plugin-deploy-vm/lifecycle.go,
-            charly/unified_targets.go, charly/deploy_target_dispatch.go,
-            plugin-fleet/candy/plugin-fleet/deploy_target.go, spec/exec/deploy_executor*.go,
-            sdk/deploykit/vm_deploy_state.go, plugin-vm/candy/plugin-vm/vm_util_copies.go.
-            (The former charly/fleet_add_cmd_vm.go is DELETED, K-wave 2.)
-            MUST be invoked before editing VM-target deploy code.
+            The external VM deploy substrate applies InstallPlan inside a guest via the reverse-channel SSH executor — plugin-deploy-vm, VM boot/readiness, Charly delivery, nested pods, lifecycle, VmDeployState, DeployExecutor, the pluginDeployTarget/UnifiedDeployTarget seams. Use before editing VM-target deploy code.
+
         triggers:
             - "`charly update` / `charly vm *` / VM entities in `vm.yml` or `vm:`"
         content: |
@@ -9111,12 +9041,8 @@ marketplace-skill:
         family: internals
         owner: charly-internals
         description: |-
-            How the OpenCharly skill/marketplace corpus is GENERATED, refreshed, and consumed — the
-            ownership split (the charly repo owns NO skill: entities; every family lives in its
-            standalone owning candy repo, pinned by the marketplace refs list), the regeneration
-            command + schema prerequisite, the deploy drift gate, the daily refresh workflow, and
-            per-harness vendoring/caches. MUST be invoked before editing any skill source, bumping a
-            refs pin, running `charly marketplace generate`, or diagnosing "why is my skill stale".
+            How the OpenCharly skill/marketplace corpus is GENERATED, refreshed, and consumed — the ownership split, regeneration command + schema prerequisite, deploy drift gate, daily refresh, per-harness caches. Use before editing the corpus or refs list.
+
         triggers:
             - "Marketplace / skill-corpus generation — `charly marketplace generate`, the refs list (candy/charly-marketplace/charly.yml), the drift gate, the daily refresh PRs, per-harness vendoring, or 'my skill is stale'"
         content: |-
