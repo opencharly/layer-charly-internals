@@ -8325,9 +8325,10 @@ skills-skill:
             ```markdown
             ---
             name: <skill-name>
-            description: |-
-                Skill maintenance: when and how to update skills, root rulebooks, and README.md. Use when updating documentation, feeding back operational insights, or auditing skill coverage.
-
+            description: |
+              One-sentence description of when to invoke this skill.
+              For layers: "Use when working with <component>."
+              For images: "MUST be invoked before building, deploying, or troubleshooting the <image> image."
             ---
 
             # <Title>
