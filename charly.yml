@@ -3621,16 +3621,24 @@ git-workflow-skill:
 
             ## Umbrella mechanics (when you work in the ~400-submodule umbrella)
 
+            **These are umbrella-REPO-maintenance mechanics, run inside a checkout of the
+            `opencharly/opencharly` umbrella — never commands a charly user runs with only the
+            `charly` binary.** They are documented here because the umbrella `AGENTS.md`
+            Skill Dispatcher routes its pinning/gitlink row to this skill, and the umbrella
+            `AGENTS.md` names them as the sanctioned path for that maintenance work
+            ("Umbrella-native mechanics are the sanctioned path for umbrella work"). A charly
+            end-user never sees `task`; they are the umbrella's own Taskfile targets.
+
             Inside the umbrella checkout the umbrella `AGENTS.md` governs (rule 7: read the
             subrepo's own rulebook before touching it; `charly/AGENTS.md` owns R0–R10 inside
-            `charly/`). The umbrella's own commands are the sanctioned path — never an ad-hoc
-            substitute: `task sync` (policy-B pin bump), `task verify` (the full pinning gate
-            — there is NO CI gate), `task hooks` (install the per-commit gate), `task harness`
-            (config parity), `task map`. Hard rules there: **never edit inside a submodule**
-            (change lands by PR to the owning repo; the umbrella only records gitlinks), run
-            submodule git through `git -C <absolute-path>` from the umbrella root, no
-            worktrees inside submodules, pin only MERGED refs, and bound every command's
-            output (SIGPIPE is ignored — `grep` floods on `Broken pipe`). Full detail:
+            `charly/`). The umbrella's own commands — never an ad-hoc substitute — are:
+            `task sync` (policy-B pin bump), `task verify` (the full pinning gate — there is
+            NO CI gate), `task hooks` (install the per-commit gate), `task harness` (config
+            parity), `task map`. Hard rules there: **never edit inside a submodule** (change
+            lands by PR to the owning repo; the umbrella only records gitlinks), run submodule
+            git through `git -C <absolute-path>` from the umbrella root, no worktrees inside
+            submodules, pin only MERGED refs, and bound every command's output (SIGPIPE is
+            ignored — `grep` floods on `Broken pipe`). Full detail:
             `references/umbrella-mechanics.md`.
 
             ## Reference Index
@@ -3642,12 +3650,14 @@ git-workflow-skill:
             | B5 (the fresh evaluator + fork/PR path, the two-gate autonomous-landing model), CalVer generation, post-landing cleanliness + report format, and the validation-FAILS recovery sequence | `references/validator-and-calver.md` |
             | Evidence discipline — provenance vs plausibility of a pasted gate, the three freshness surfaces (head / body / pasted output), positive-vs-negative claim decay, sweeping for claims a fix invalidated, the merged-tree gate for a `BEHIND` PR, source-and-regeneration as one cross-repo cutover, submodule pointers reverted by a non-conflicting merge, and why status-absence on a known head proves nothing | `references/evidence-and-freshness.md` |
             | Umbrella mechanics — the ~400-submodule view, policy B, `task sync`/`verify`/`hooks`/`harness`, the no-edit-in-submodule rule, pin discipline | `references/umbrella-mechanics.md` |
-            | PR-state observation — the terminal-state poll | `scripts/pr_state_watch.sh` (run it; it is the sanctioned poll) |
+            | PR-state observation — the terminal-state poll | `marketplace/scripts/pr_state_watch.sh` (run it; it is the sanctioned poll) |
 
             ## The PR-state watcher (STOP on terminal, never loop)
 
-            `marketplace/scripts/pr_state_watch.sh <owner>/<repo> <pr-number>` is the one
-            sanctioned way to observe a landing: it polls the required check across ALL its
+            The one sanctioned way to observe a landing is the script
+            `scripts/pr_state_watch.sh` in the **`opencharly/marketplace`** repo — addressed
+            as `marketplace/scripts/pr_state_watch.sh` from the umbrella checkout (its home
+            on that repo's `origin/main`). It polls the required check across ALL its
             same-name runs on the head and **exits immediately** on any terminal state —
             `0` MERGED · `2` BLOCKED (a real verdict BLOCK, or the POISON stuck state, named
             in the output) · `3` CLOSED · `4` TIMEOUT · `5` ERROR. It is preferred over
