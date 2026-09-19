@@ -4705,10 +4705,11 @@ git-workflow-skill:
                        actions: write   # REQUIRED for cancel-in-progress to work
                      ```
                      This is **per-repo OPT-IN, not org-wide.** Only the umbrella root,
-                     `eval-omarchy` and `plugin-pipeline` carried it when measured; ~396 repos —
-                     including `charly`, `spec`, `plugin-vm`, `plugin-migrate`, `distro-omarchy` —
-                     did NOT, and the reusable workflow deliberately has NONE (its header: "NO
-                     concurrency here: … The dedupe lives in the per-repo DISPATCHERS").
+                     `eval-omarchy` and `plugin-pipeline` carried it when measured; of the 420
+                     `pr-validator.yml` dispatchers in the umbrella, 417 — including `charly`,
+                     `spec`, `plugin-vm`, `plugin-migrate`, `distro-omarchy` — did NOT, and the
+                     reusable workflow deliberately has NONE (its header: "NO concurrency here:
+                     … The dedupe lives in the per-repo DISPATCHERS").
                   3. **Add the dedupe to the org template** (`opencharly/.github`'s canonical
                      dispatcher) so every repo inherits it — the proper fix for the class, and
                      the thing to file when you hit POISON in a repo you are not otherwise
