@@ -3656,8 +3656,9 @@ git-workflow-skill:
 
             The one sanctioned way to observe a landing is the script
             `scripts/pr_state_watch.sh` in the **`opencharly/marketplace`** repo — addressed
-            as `marketplace/scripts/pr_state_watch.sh` from the umbrella checkout (its home
-            on that repo's `origin/main`). It polls the required check across ALL its
+            as `marketplace/scripts/pr_state_watch.sh` from the umbrella checkout. (It lands
+            via the companion `opencharly/marketplace#318`; until that merges, call it from
+            that branch's tree.) It polls the required check across ALL its
             same-name runs on the head and **exits immediately** on any terminal state —
             `0` MERGED · `2` BLOCKED (a real verdict BLOCK, or the POISON stuck state, named
             in the output) · `3` CLOSED · `4` TIMEOUT · `5` ERROR. It is preferred over
