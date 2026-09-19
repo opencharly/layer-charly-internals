@@ -3565,9 +3565,9 @@ git-workflow-skill:
             `gh workflow run pr-validator.yml -f pr-number=<N> --ref <branch>` is the
             alternative, and **`--ref` is MANDATORY**: a `workflow_dispatch` with no `--ref`
             runs on the DEFAULT branch, so its check registers on `main` and counts for
-            nothing on the PR. Measured on opencharly/plugin-vm#39: the same dispatch without
-            `--ref` produced no head check; with `--ref feat/deploy-shape-override` it
-            registered the green check on the branch head.
+            nothing on the PR. Measured on opencharly/plugin-vm#39 (head `c9457a9`): the same
+            dispatch without `--ref` produced no head check; carrying the branch ref --
+            `--ref feat/deploy-shape-override` -- it registered the green check on the branch head.
 
             **There is NO self-heal.** The reusable workflow sets a `head_ref` output but
             never consumes it (`grep -c 'steps.pr.outputs'` in
