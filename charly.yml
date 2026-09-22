@@ -3519,8 +3519,12 @@ git-workflow-skill:
             workflow; the CalVer tag and the CHANGELOG are written afterwards by the
             independent `tag-on-merge` workflow, triggered by the merge. A **direct
             push to `main` is FORBIDDEN and mechanically disabled** — ONE organization branch
-            RULESET blocks it (`creation`/`deletion`/`non_fast_forward` + a strict required
-            `validate / validate` status check); the legacy branch-protection API is NOT used
+            RULESET blocks it. On GitHub Team that ONE ruleset carries both the branch rules
+            (`creation`/`deletion`/`non_fast_forward` + a strict required `validate / validate`
+            status check) and the `workflows` rule ("Require workflows to pass") naming
+            `opencharly/.github/.github/workflows/org-wide-pr-validator-required.yml`, so the
+            validator is required ONCE org-wide with no per-repo stub to install. The legacy
+            branch-protection API is NOT used
             and `org-ruleset.sh` removes it wherever it survives, because it has no bypass slot
             for the app that writes the CHANGELOG. The `pre-push-gate` adds a local backstop in
             every harness that wires it — including Claude Code, via
