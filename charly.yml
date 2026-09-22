@@ -3518,11 +3518,11 @@ git-workflow-skill:
             OWN native auto-merge (squash) inline — there is no separate `auto-merge`
             workflow; the CalVer tag and the CHANGELOG are written afterwards by the
             independent `tag-on-merge` workflow, triggered by the merge. A **direct
-            push to `main` is FORBIDDEN and mechanically disabled** — a per-repo branch
-            RULESET blocks it (`creation`/`deletion`/`non_fast_forward` + a required
+            push to `main` is FORBIDDEN and mechanically disabled** — ONE organization branch
+            RULESET blocks it (`creation`/`deletion`/`non_fast_forward` + a strict required
             `validate / validate` status check); the legacy branch-protection API is NOT used
-            and `branch-protection.sh` actively removes it, because it has no bypass slot for
-            the app that writes the CHANGELOG. The `pre-push-gate` adds a local backstop in
+            and `org-ruleset.sh` removes it wherever it survives, because it has no bypass slot
+            for the app that writes the CHANGELOG. The `pre-push-gate` adds a local backstop in
             every harness that wires it — including Claude Code, via
             `.claude/settings.json`'s PreToolUse hooks. The **R10 pass
             authorizes OPENING the PR, never a self-merge**: the two-step landing separates the
@@ -3541,13 +3541,14 @@ git-workflow-skill:
               standard append-only move (never force) — and the push fires a fresh `pull_request`
               (`synchronize`) run on the NEW head: measured on opencharly/plugin-pipeline#28 and
               opencharly/plugin-vm#35, an empty commit produced a fresh `charly/pr-validator`
-              `ev=pull_request` run keyed to the new SHA. `gh workflow run pr-validator.yml -f
-              pr-number=<N> --ref <branch>` is the alternative, but it re-dispatches on the SAME head:
+              `ev=pull_request` run keyed to the new SHA. Re-dispatching the reusable
+              validator (`gh workflow run pr-validator.yml --repo opencharly/.github -f
+              pr-number=<N> --ref <branch>`) is the alternative, but it re-dispatches on the SAME head:
               GitHub's rollup keeps BOTH check runs for that name, and a stale earlier `failure` of the
               same name can keep the PR `BLOCKED` even after the dispatched run is green — a fresh SHA
               from an empty commit is the reliable path. (The "empty commit does nothing" belief is
-              WRONG: the dispatcher `on: pull_request: types: [opened, synchronize, …]` has no
-              `paths:`/diff guard, so a no-content push still fires it.)
+              WRONG: the org required workflow's `on: pull_request: types: [opened, synchronize, …]`
+              has no `paths:`/diff guard, so a no-content push still fires it.)
             - **A `workflow_dispatch` without `--ref` runs on the DEFAULT branch** and its check registers
               there — the reusable workflow now re-dispatches itself on the PR head ref (self-heal),
               so the green check always lands on the branch head.
@@ -3567,7 +3568,7 @@ git-workflow-skill:
 
             ## Non-negotiable invariants
 
-            - **No direct push to `main`** (the project rulebook's PR-only landing mandate — see "Post-Execution Policies"). Enforced by a per-repo branch RULESET on `refs/heads/main` — `creation` + `deletion` + `non_fast_forward` + a strict required status check named exactly **`validate / validate`**, with the `charly-auto-merge` GitHub App as the only bypass actor (its scoped bypass is what lets tag-on-merge's CHANGELOG commit land on a protected `main`). The LEGACY branch-protection API is deliberately NOT used: it has no bypass slot for that app, so `branch-protection.sh` deletes it wherever it survives, and `enforce_admins` plays no part. The `pre-push-gate` adds a local backstop in every harness that wires it — Claude Code included, via `.claude/settings.json`'s PreToolUse hooks. Organization-wide apply/verify is owned only by `opencharly/.github/scripts/branch-protection.sh`.
+            - **No direct push to `main`** (the project rulebook's PR-only landing mandate — see "Post-Execution Policies"). Enforced by ONE organization branch RULESET on `refs/heads/main` (`creation` + `deletion` + `non_fast_forward` + a strict required status check named exactly **`validate / validate`**), with the `charly-auto-merge` GitHub App as the only bypass actor (its scoped bypass is what lets tag-on-merge's CHANGELOG commit land on a protected `main`). On GitHub Team that ONE ruleset also carries the **`workflows`** rule ("Require workflows to pass") naming `opencharly/.github/.github/workflows/org-wide-pr-validator-required.yml`, so the validator is required ONCE org-wide with no per-repo dispatcher to install. The LEGACY branch-protection API is deliberately NOT used: it has no bypass slot for that app, so `org-ruleset.sh` deletes it wherever it survives, and `enforce_admins` plays no part. The `pre-push-gate` adds a local backstop in every harness that wires it — Claude Code included, via `.claude/settings.json`'s PreToolUse hooks. Organization-wide apply/verify is owned only by `opencharly/.github/scripts/org-ruleset.sh`.
             - **Never force-push, on any branch, ever** (mandate, same rulebook section). `main` only fast-forwards via native auto-merge's squash; a `feat/` branch, once pushed, advances only by ADDING commits (the author's change plus any review-round fix commits), and the squash-merge collapses them. A stale `feat/` catches up with `gh pr update-branch` (a merge, NOT a rebase-force); tags are add-only. **Amending a `feat/` branch is a normal authoring action — legal until the first push** (amending a pushed branch would require a force-push, which is forbidden).
             - **R10-gated; the merge requires the `charly/pr-validator` gate's green check run.** R10 PASS authorizes opening the PR (with pasted evidence); a rule violation or R10 FAIL means a red `charly/pr-validator` check and no merge — fix in the same tree, re-run R10, re-push; the check resets and the validator re-runs.
             - **Zero warnings is part of R10** (project rulebook R1). A version-mismatch warning clears with `charly box reconcile`; any other warning gets `/charly-internals:root-cause-analyzer` then a real fix — "warning" is never an accepted end state.
@@ -3601,8 +3602,8 @@ git-workflow-skill:
 
             - the project rulebook "Post-Execution Policies" — the mandate this skill operationalizes.
             - `marketplace/internals/agents/pr-validator.md` — the fresh evaluator's full spec.
-            - `opencharly/.github/scripts/branch-protection.sh` — the sole organization-wide
-              branch-protection apply/verify owner.
+            - `opencharly/.github/scripts/org-ruleset.sh` — the sole organization-wide owner
+              of the ONE branch ruleset (required workflow + branch rules) apply/verify.
             - `/charly-internals:cutover-policy` — one-phase, atomic-commit, R10-at-the-end.
             - `/charly-build:migrate` — `version:` ↔ tag coupling, per-merge tags, push order.
             - `/charly-build:reconcile` — cross-repo `@github` pin alignment used by B6.
@@ -3691,9 +3692,9 @@ git-workflow-skill:
                   - **Validation** — fresh `pr-validator`s run CONCURRENTLY across all ready PRs
                     (each is an independent context; nothing couples them before the merge instant).
                   - **After each merge** — every still-open PR goes `BEHIND` (branch protection is
-                    org-wide, not per-repo-set: `opencharly/.github/scripts/branch-protection.sh`
-                    applies `strict: true` require-up-to-date with the single `charly/pr-validator`
-                    context to EVERY active `main`-default repo — 14 today — so every repo in a
+                    org-wide via ONE ruleset, not per-repo-set: `opencharly/.github/scripts/org-ruleset.sh`
+                    applies `strict: true` require-up-to-date with the single `validate / validate`
+                    context to EVERY active `main`-default repo — ~409 today — so every repo in a
                     cross-repo cutover is covered; KEPT deliberately: one shared Go package with
                     no CI on `main` means merging a stale-base green PR opens a semantic-conflict
                     blind spot; that is the technical reason, not doctrine). Recover with
@@ -4322,8 +4323,9 @@ git-workflow-skill:
                   - **Write access (the default):** the author opens the PR (B1 step 1); the fresh
                     `pr-validator` (new context, not the author's context, not a teammate that
                     authored the code) certifies `Verdict: PASS|BLOCK` for the ORG-WIDE
-                    `charly/pr-validator` GitHub Actions gate; on PASS the org-wide `auto-merge`
-                    workflow enables native auto-merge (squash), and the org-wide `tag-on-merge`
+                    `charly/pr-validator` GitHub Actions gate; on PASS that same gate's workflow
+                    enables native auto-merge (squash) inline (there is no separate auto-merge
+                    workflow), and the org-wide `tag-on-merge`
                     workflow then finalizes the merge-time CalVer, writes `CHANGELOG/<CalVer>.md`
                     from the merged PR body, and tags the merged HEAD.
                     Sequence + guardrails: `marketplace/internals/agents/pr-validator.md`. The gate
@@ -4338,7 +4340,8 @@ git-workflow-skill:
                   **Why a status, not a review approval — and what it does not buy.** GitHub forbids a
                   PR's author from approving their own PR, and a local sub-agent shares the author's
                   identity. A commit status carries no such GitHub-side restriction, which is why
-                  `charly/pr-validator` is the required check. Be precise about what that means:
+                  the `validate / validate` check run (produced by the org required workflow) is
+                  the required check. Be precise about what that means:
                   the status is **agent-attested validation, not two-party review**. The fresh
                   `pr-validator` supplies context independence (a new context re-deriving the verdict
                   adversarially, trusting no author claim) — which demonstrably catches real defects —
