@@ -3599,7 +3599,8 @@ git-workflow-skill:
             `Verdict:` line at all. Read the `## validator INCONCLUSIVE` comment's
             `Diagnostics` tail before touching your branch: it is the evidence that names the
             class. Do NOT "fix" your code for an INCONCLUSIVE — there is no code finding to
-            fix, and a re-dispatch of the same head will not help.
+            fix — and do NOT re-dispatch the same head hoping for a different result; classify
+            the cause from the diagnostics, then act on THAT.
 
             The two root causes, and how to tell them apart from the diagnostics tail:
 
@@ -3607,49 +3608,34 @@ git-workflow-skill:
               class. The gate's review engine is whatever `plugin-review` is **welded into the
               charly binary** it runs; an engine OLDER than the fix that produced those lines
               spins a tool loop and emits no verdict. The org pins a current engine via
-              `vars.CHARLY_VERSION` (weld of `plugin-review`); a self-hosted runner whose IMAGE
-              bakes an older `charly` used to short-circuit that pin (`if command -v charly;
-              then exit 0`) and silently ran the stale welded engine. Fixed in
-              `opencharly/.github#115`: `ensure-charly` now verifies the on-PATH `charly`
-              against the pin and downloads the pinned release when they differ. If you see
-              this signature, check `vars.CHARLY_VERSION` and the runner — do not re-dispatch
-              the same head hoping for a different engine.
+              `vars.CHARLY_VERSION`; a self-hosted runner whose IMAGE bakes an older `charly`
+              used to short-circuit that pin (`if command -v charly; then exit 0`) and silently
+              ran the stale welded engine. The pin enforcement that closes this is
+              `opencharly/.github#115` (`ensure-charly` now verifies the on-PATH `charly`
+              against the pin and downloads the pinned release when they differ). If you see
+              this signature, the cause is the RUNNER ENVIRONMENT, not your diff — escalate to
+              the operator (a stale runner image; the pin enforcement makes a stale on-PATH
+              engine harmless once the workflow at `main` is the enforced one).
             - **`inconclusive: … provider did not respond / attempt timed out`** (or an HTTP
-              status / stall marker) = the PROVIDER class — a transient endpoint failure or a
-              timeout on an unusually long turn. There IS a legitimate retry here: push a
-              **empty commit** (a new SHA fires a fresh run) or, if the operator authorizes,
-              re-dispatch with `--ref`. The `AI_REVIEW_ATTEMPT_TIMEOUT` /
-              `AI_REVIEW_REASONING_EFFORT` / `AI_REVIEW_MAX_TOKENS` org vars tune this class.
+              status / stall marker) = the PROVIDER/ENDPOINT class. The evidence is in the
+              message: the provider returned a status, or the stream stalled / the whole-request
+              deadline elapsed. This is owned by the gate's provider configuration (the org
+              `AI_REVIEW_*` vars: provider/model, `AI_REVIEW_ATTEMPT_TIMEOUT`,
+              `AI_REVIEW_REASONING_EFFORT`, `AI_REVIEW_MAX_TOKENS`) — escalate to the operator,
+              who owns that configuration, rather than re-running blindly. Do not record it as
+              a "flake"; a provider-class INCONCLUSIVE is a real signal that the provider bound
+              or budget needs the operator's attention.
 
             **The distinction that matters:** a real **BLOCK** has a `## Review — BLOCK`
-            heading and a `### Blocks` list you must fix; an **INCONCLUSIVE** has neither and
+            heading and a `### Blocks` list you MUST fix; an **INCONCLUSIVE** has neither and
             must NOT be treated as a review finding (reporting it as one, or "fixing" code to
             satisfy it, is an R1 misdiagnosis). The gate's own workflow classifies INCONCLUSIVE
-            as exit 3 and keeps the check red; `pr_state_watch.sh` reports it distinctly from a
-            verdict BLOCK. Never bypass the red check by merging around it — the ONLY sanctioned
-            merge under an INCONCLUSIVE is the operator-authorized admin override, and ONLY
-            after you have run the validator LOCALLY against the exact head and obtained a real
-            `Verdict: PASS` (see "Running the validator locally" below).
-
-            ### Running the validator locally (the authorized-override evidence path)
-
-            When the gate itself cannot render a verdict on a PR (the stale-engine class, or a
-            T13 engine-change PR that the pinned engine cannot review), the operator may
-            authorize an **admin override**. The pre-condition is a LOCAL run of the SAME
-            pinned engine against the SAME head that yields a real `Verdict: PASS`:
-
-            1. fetch the org-pinned release (`vars.CHARLY_VERSION`) binary + its
-               `charly-plugins-linux-amd64.tar.gz` bundle (the bundle is where the welded
-               `plugin-review` lives);
-            2. `CHARLY_PLUGIN_DIR=<bundle> <pinned-charly> review --out /tmp/review.txt` with
-               `PR_NUMBER`, `GITHUB_REPOSITORY`, `GITHUB_TOKEN`, the `AI_REVIEW_*` provider
-               vars, and `REVIEW_PROMPT_PATH` set (the `action-review` repo carries the
-               `prompt/validator.md` + `review-plan.yml` the gate uses);
-            3. require `plugin-review: verdict_lines=1 distinct=[PASS]` and a
-               `Verdict: PASS` in `--out`;
-            4. record that output on the PR (an override comment) and admin-merge. The org
-               ruleset has NO human bypass actor — the override is a deliberate, operator-
-               authorized, briefly-scoped action, never a standing privilege.
+            as exit 3 and keeps the check RED; `pr_state_watch.sh` reports it distinctly from a
+            verdict BLOCK. **Never merge around the red check** — an INCONCLUSIVE is an
+            environment/provider condition to fix or escalate, not a licence to bypass the
+            gate. The only merge under a red required check is an explicit, operator-issued
+            override decision, taken by the operator on evidence THEY accept — it is never an
+            agent's call, and never a documented standing procedure.
 
             ### `pr_state_watch.sh` — STOP on a terminal state, never poll in a loop
 
