@@ -3590,6 +3590,67 @@ git-workflow-skill:
             dispatcher. Full mechanics and the dedupe YAML:
             `references/validator-and-calver.md` "The POISON state".
 
+            ### The INCONCLUSIVE (verdict-less) class — the gate ran but produced no verdict
+
+            A third terminal state sits beside PASS and BLOCK: **`## validator INCONCLUSIVE —
+            no review verdict was produced (not a BLOCK; no code finding)`**. The required
+            check stays **RED on purpose** (unreviewed code must never merge), but this is
+            **NOT a finding about your diff** — it means the review engine produced no
+            `Verdict:` line at all. Read the `## validator INCONCLUSIVE` comment's
+            `Diagnostics` tail before touching your branch: it is the evidence that names the
+            class. Do NOT "fix" your code for an INCONCLUSIVE — there is no code finding to
+            fix, and a re-dispatch of the same head will not help.
+
+            The two root causes, and how to tell them apart from the diagnostics tail:
+
+            - **`turn 1: N tool call(s)` → `turn 2: final content len=0`** = the STALE-ENGINE
+              class. The gate's review engine is whatever `plugin-review` is **welded into the
+              charly binary** it runs; an engine OLDER than the fix that produced those lines
+              spins a tool loop and emits no verdict. The org pins a current engine via
+              `vars.CHARLY_VERSION` (weld of `plugin-review`); a self-hosted runner whose IMAGE
+              bakes an older `charly` used to short-circuit that pin (`if command -v charly;
+              then exit 0`) and silently ran the stale welded engine. Fixed in
+              `opencharly/.github#115`: `ensure-charly` now verifies the on-PATH `charly`
+              against the pin and downloads the pinned release when they differ. If you see
+              this signature, check `vars.CHARLY_VERSION` and the runner — do not re-dispatch
+              the same head hoping for a different engine.
+            - **`inconclusive: … provider did not respond / attempt timed out`** (or an HTTP
+              status / stall marker) = the PROVIDER class — a transient endpoint failure or a
+              timeout on an unusually long turn. There IS a legitimate retry here: push a
+              **empty commit** (a new SHA fires a fresh run) or, if the operator authorizes,
+              re-dispatch with `--ref`. The `AI_REVIEW_ATTEMPT_TIMEOUT` /
+              `AI_REVIEW_REASONING_EFFORT` / `AI_REVIEW_MAX_TOKENS` org vars tune this class.
+
+            **The distinction that matters:** a real **BLOCK** has a `## Review — BLOCK`
+            heading and a `### Blocks` list you must fix; an **INCONCLUSIVE** has neither and
+            must NOT be treated as a review finding (reporting it as one, or "fixing" code to
+            satisfy it, is an R1 misdiagnosis). The gate's own workflow classifies INCONCLUSIVE
+            as exit 3 and keeps the check red; `pr_state_watch.sh` reports it distinctly from a
+            verdict BLOCK. Never bypass the red check by merging around it — the ONLY sanctioned
+            merge under an INCONCLUSIVE is the operator-authorized admin override, and ONLY
+            after you have run the validator LOCALLY against the exact head and obtained a real
+            `Verdict: PASS` (see "Running the validator locally" below).
+
+            ### Running the validator locally (the authorized-override evidence path)
+
+            When the gate itself cannot render a verdict on a PR (the stale-engine class, or a
+            T13 engine-change PR that the pinned engine cannot review), the operator may
+            authorize an **admin override**. The pre-condition is a LOCAL run of the SAME
+            pinned engine against the SAME head that yields a real `Verdict: PASS`:
+
+            1. fetch the org-pinned release (`vars.CHARLY_VERSION`) binary + its
+               `charly-plugins-linux-amd64.tar.gz` bundle (the bundle is where the welded
+               `plugin-review` lives);
+            2. `CHARLY_PLUGIN_DIR=<bundle> <pinned-charly> review --out /tmp/review.txt` with
+               `PR_NUMBER`, `GITHUB_REPOSITORY`, `GITHUB_TOKEN`, the `AI_REVIEW_*` provider
+               vars, and `REVIEW_PROMPT_PATH` set (the `action-review` repo carries the
+               `prompt/validator.md` + `review-plan.yml` the gate uses);
+            3. require `plugin-review: verdict_lines=1 distinct=[PASS]` and a
+               `Verdict: PASS` in `--out`;
+            4. record that output on the PR (an override comment) and admin-merge. The org
+               ruleset has NO human bypass actor — the override is a deliberate, operator-
+               authorized, briefly-scoped action, never a standing privilege.
+
             ### `pr_state_watch.sh` — STOP on a terminal state, never poll in a loop
 
             `marketplace/scripts/pr_state_watch.sh <owner>/<repo> <pr-number>` watches the
