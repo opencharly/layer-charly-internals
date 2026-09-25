@@ -1048,13 +1048,13 @@ agents-skill:
                     downloaded as a published release) installed with the distro's own
                     package manager
                     — this is the only canonical host-refresh path; no host-install task
-                    auto-installs system-wide. (`./scripts/bootstrap-charly.sh --install` — a portable
+                    auto-installs system-wide. (`scripts/bootstrap-charly.sh --install` — a portable
                     `$HOME/.local/bin/charly` copy — remains for solo bootstrap, but it
                     writes to a host location exactly like a package install, so the same
                     in-flight-work boundary below applies to it too.)
                   - **The host-install boundary — no host-writing target runs during
                     in-flight multi-teammate work, period.** Neither the package-manager
-                    install nor `./scripts/bootstrap-charly.sh --install` runs while teammates are
+                    install nor `scripts/bootstrap-charly.sh --install` runs while teammates are
                     mid-cutover: both write to host state (`$PATH` or `$HOME`) every
                     concurrent teammate may resolve, and either would publish an unmerged
                     branch's binary where a sibling teammate or the operator expects
@@ -1073,7 +1073,7 @@ agents-skill:
                     — version/help/status/inspect/list — are exempt). This is entirely
                     self-consistent per worktree: a guard trip while running `./bin/charly`
                     inside your own worktree means your `bin/charly` is older than your own
-                    edits — the fix is `./scripts/bootstrap-charly.sh`, never a host install. A guard
+                    edits — the fix is `scripts/bootstrap-charly.sh`, never a host install. A guard
                     trip that resolves to the host-installed `charly` means you are on the
                     wrong path (your worktree's `./bin` isn't ahead of it on `$PATH`) or
                     running the wrong bed class (next bullet).
@@ -1112,7 +1112,7 @@ agents-skill:
                   - **Multi-worktree concurrency corollary.** Because each worktree carries
                     its own binary and its own freshness-guard scope, teammates working in
                     distinct worktrees need no freeze barrier between them — each rebuilds
-                    its own `./bin/charly` via `./scripts/bootstrap-charly.sh` whenever it likes, with
+                    its own `./bin/charly` via `scripts/bootstrap-charly.sh` whenever it likes, with
                     zero cross-teammate interference. The only freeze that exists is the
                     within-worktree self-freeze below: within one worktree, freeze your own
                     `charly/*.go` for the duration of your own bed run. There is no
@@ -1129,7 +1129,7 @@ agents-skill:
                     same rule: (a) across distinct worktrees, no barrier is needed (each
                     worktree's binary is independent); (b) within one worktree, freeze your
                     own `charly/*.go` for the duration of your own bed run — queue edits
-                    until the verdict lands, then `./scripts/bootstrap-charly.sh` and re-run. The
+                    until the verdict lands, then `scripts/bootstrap-charly.sh` and re-run. The
                     failure is self-inflicted, not a product defect: RCA it as "I edited
                     mid-run", rebuild, and re-run fresh — never chase the guard as a bug.
                     "Your own" is worktree-scoped, not agent-scoped — a spawned sub-agent
@@ -1158,7 +1158,7 @@ agents-skill:
                     main checkout —
                     never via a host-install task that installs directly. Each long-lived
                     worktree is then either removed (its cutover is done) or fast-forwarded
-                    to the new `main` plus a `./scripts/bootstrap-charly.sh` re-run before reuse — never
+                    to the new `main` plus a `scripts/bootstrap-charly.sh` re-run before reuse — never
                     left pointing at a pre-merge binary while its worktree source has moved
                     on.
 
@@ -1493,7 +1493,7 @@ agents-skill:
                      the concurrent-bed proof and the CalVer-stamping detail. The freshness
                      guard (`verb:freshness-guard`, `candy/plugin-doctor/freshness.go`) compares
                      `os.Executable()` against the
-                     cwd-walked source root, so a worktree with its own `./scripts/bootstrap-charly.sh`
+                     cwd-walked source root, so a worktree with its own `scripts/bootstrap-charly.sh`
                      output is self-consistent: `PATH=$PWD/bin:$PATH charly check run <bed>`
                      runs the full R10 sequence (deploy-add → check-live → fresh update →
                      cleanup, external plugins included) on the worktree's binary without
@@ -1503,7 +1503,7 @@ agents-skill:
                      sibling's roughly 265s window), with separate per-tree
                      `.check/`/`.build/` outputs, zero cross-contamination, zero leftover
                      deploys. Requirements: the worktree needs NO sdk/spec checkout
-                     (`./scripts/bootstrap-charly.sh` reads `scripts/calver.sh`; the sdk + spec contract
+                     (`scripts/bootstrap-charly.sh` reads `scripts/calver.sh`; the sdk + spec contract
                      modules resolve from the module proxy at the pinned require versions) but
                      not the `box/<distro>` submodules for the root disposable roster: root
                      `charly.yml` imports the distro namespaces (arch/cachyos/fedora) via
@@ -1515,7 +1515,7 @@ agents-skill:
                      box-specific work, not the cross-cutting root roster.) Never install to
                      the host from a worktree — the host-install boundary above is absolute,
                      and no maintenance task does it anyway. **The per-worktree binary must be
-                     CalVer-stamped** — build it with `./scripts/bootstrap-charly.sh`, which passes
+                     CalVer-stamped** — build it with `scripts/bootstrap-charly.sh`, which passes
                      `-ldflags "-X main.BuildCalVer=<calver>"`; a bare `go build -o` yields
                      an unstamped binary that reports version `unknown` and fails every bed
                      step asserting the CalVer stamp (a `vm:` bed pushes the host binary
@@ -4131,7 +4131,7 @@ git-workflow-skill:
                   log -1 --format=%cd --date='format-local:%Y %j %H %M'` — the `TZ=UTC0` is what makes
                   the bare `%cd` UTC; without it `%cd` uses the commit's own TZ offset), so the stamp
                   identifies the SOURCE COMMIT, never the build moment — a
-                  `./scripts/bootstrap-charly.sh` on a DIRTY working tree reports the IDENTICAL version as the clean
+                  `scripts/bootstrap-charly.sh` on a DIRTY working tree reports the IDENTICAL version as the clean
                   commit under it. So `charly version` matching the expected CalVer does NOT prove your
                   uncommitted fix compiled in. Prove fix-presence by a content marker instead: `strings
                   bin/charly | grep '<a string unique to the fix>'` (a new error message, flag name, or
@@ -4771,24 +4771,20 @@ git-workflow-skill:
 
                   ### The umbrella task surface (each a `kind: task` in the root charly.yml)
 
-                  - **`charly task sync`** (`task:pins`, mode=`bump`): bump every submodule pin per
-                    policy B (preview only — it does not commit or open a PR). The bump is
-                    ORDER-CORRECT: charly rolls to its default-branch HEAD first, then distro-* are
-                    pinned from charly's NEW gitlinks (verb:git-submodules).
+                  - **`charly task sync`**: bump every submodule pin per policy B (preview only —
+                    it does not commit or open a PR).
                   - **`charly task verify`**: the FULL pinning gate on demand — every pin, including
-                    the remote branch audit, worktree cleanliness, and charly's nested-submodule
-                    check. There is **no CI gate** for this; `charly task verify` IS the gate. Run it
-                    on the final tree and paste the output (R7: a green `git status` proves nothing).
+                    the remote branch audit. There is **no CI
+                    gate** for this; `charly task verify` IS the gate. Run it on the final tree and
+                    paste the output (R7: a green `git status` proves nothing).
                   - **`charly task hooks`**: install the per-commit gate once per clone (sets
-                    `core.hooksPath hooks`); policy B + harness parity + the self-tests then run on
-                    every commit.
-                  - **`charly task harness`** (`verb:file-parity`): the root harness config mirrors
-                    the source repo's; keep it in sync, never fork it silently (AGENTS.md rule 8).
+                    `core.hooksPath hooks`); policy B + harness parity then run on every commit.
+                  - **`charly task harness`**: the root harness
+                    config mirrors the source repo's; keep it in sync, never fork it silently
+                    (AGENTS.md rule 8).
                   - **`charly task map`**: list every submodule with its pin and sync state.
-                  - **`charly task skills`** → the retained umbrella helper
-                    `scripts/sync-dispatcher.sh` (a PR-body/dispatcher generator invoked BY the
-                    task, not a generic maintenance sweep the plugin verbs cover): splice the
-                    generated R0 dispatcher from the pinned marketplace into `AGENTS.md`.
+                  - **`charly task skills`** → `scripts/sync-dispatcher.sh`: splice the generated R0
+                    dispatcher from the pinned marketplace into `AGENTS.md`.
 
                   ### Policy B (the pinning contract)
 
@@ -5586,16 +5582,16 @@ go-skill:
 
             | Action | Command | Description |
             |--------|---------|-------------|
-            | Build | `./scripts/bootstrap-charly.sh` | Compile to `bin/charly` (CalVer-stamped), NO install. The charly-dev candy (declared in the repo-root `charly.yml`) copies THIS file directly — there is no second path to keep in sync. Does NOT touch any packaging source (the native packages are built by the `charly generate-packages` plugin from `packaging/charly.yml`'s `packaging:` section) |
+            | Build | `scripts/bootstrap-charly.sh` | Compile to `bin/charly` (CalVer-stamped), NO install. The charly-dev candy (declared in the repo-root `charly.yml`) copies THIS file directly — there is no second path to keep in sync. Does NOT touch any packaging source (the native packages are built by the `charly generate-packages` plugin from `packaging/charly.yml`'s `packaging:` section) |
             | Package | `charly generate-packages` (nFPM plugin) | Build a distro-native `.pkg.tar.zst`/`.rpm`/`.deb`/`.apk`/`.ipk` release artifact via the `charly generate-packages` plugin (nFPM, `sdk/packagekit`), published to the per-distro package repos. Install it yourself with your OWN package manager (`pacman -U`/`dnf install`/`apt install`/`apk add`) |
-            | Install (portable) | `./scripts/bootstrap-charly.sh --install` | Copy `bin/charly` to `$HOME/.local/bin/charly` (solo bootstrap; NOT a multi-teammate dev-loop step — see below) |
+            | Install (portable) | `scripts/bootstrap-charly.sh --install` | Copy `bin/charly` to `$HOME/.local/bin/charly` (solo bootstrap; NOT a multi-teammate dev-loop step — see below) |
             | Run tests | `cd charly && go test ./...` | Run all tests |
             | Run specific test | `cd charly && go test -run TestName ./...` | Run single test |
             | Vet | `cd charly && go vet ./...` | Static analysis |
             | Format | `cd charly && gofmt -w .` | Format code |
 
             In a multi-teammate / multi-worktree setup, NO task installs to the
-            host during in-flight work — use `./scripts/bootstrap-charly.sh` per worktree instead; see
+            host during in-flight work — use `scripts/bootstrap-charly.sh` per worktree instead; see
             `/charly-internals:agents` "The charly binary in a multi-teammate /
             multi-worktree setup" for the full discipline.
 
@@ -5603,7 +5599,7 @@ go-skill:
 
             ```
             project/
-            ├── bin/charly                     # Built by `./scripts/bootstrap-charly.sh` (gitignored)
+            ├── bin/charly                     # Built by `scripts/bootstrap-charly.sh` (gitignored)
             ├── charly/                        # Go module (kong CLI, go-containerregistry)
             │   └── charly.yml             # The binary's embedded default config (//go:embed,
             │                              # embed_defaults.go): distro/builder/init/resource
@@ -5676,7 +5672,7 @@ go-skill:
             charly box build <image>
             ```
 
-            There is no longer a dual-path gotcha here. `bin/charly` at the repo root is the ONE path: host-side invocations use it, and the charly-dev candy's `copy: bin/charly` resolves against the repo root and reads the same file. It used to be two paths kept in step by `./scripts/bootstrap-charly.sh`, and forgetting the sync baked the previous binary into every check bed — silently, because nothing failed. Declaring the candy where the path already resolves removed the second path and that whole class of mistake.
+            There is no longer a dual-path gotcha here. `bin/charly` at the repo root is the ONE path: host-side invocations use it, and the charly-dev candy's `copy: bin/charly` resolves against the repo root and reads the same file. It used to be two paths kept in step by `scripts/bootstrap-charly.sh`, and forgetting the sync baked the previous binary into every check bed — silently, because nothing failed. Declaring the candy where the path already resolves removed the second path and that whole class of mistake.
 
             ## Environment constraints — sandboxed /tmp + Go temp dirs
 
@@ -5988,7 +5984,7 @@ go-skill:
                   |---|---|---|
                   | `spec/schema/*.cue` (the base ingress schema) | `charly task cue-gen` — `cue exp gengotypes` + `spec/internal/schemagen` (concat/retag/vocab/version), both over the shared `spec/schemaconcat` | `spec/spec/cue_types_gen.go`, `spec/spec/vocab_gen.go`, `spec/spec/version_gen.go` |
                   | each plugin's own `schema/*.cue` | the SAME `cue exp gengotypes` pipeline (`-pkg=params`), run in the plugin's OWN repo | `candy/plugin-*/params/cue_types_gen.go` |
-                  | `charly/charly.yml` `compiled_plugins:` | `pluginsgen` (`charly/internal/pluginsgen`, run by `./scripts/bootstrap-charly.sh`) | `charly/plugins_generated.go` + the repo-root `go.work` |
+                  | `charly/charly.yml` `compiled_plugins:` | `pluginsgen` (`charly/internal/pluginsgen`, run by `scripts/bootstrap-charly.sh`) | `charly/plugins_generated.go` + the repo-root `go.work` |
                   | `spec/protocol/schema/*.cue` | `charly task wire-gen` (wiregen + pinned protoc plugins) | `spec/proto/plugin.proto`, `plugin.pb.go`, `plugin_grpc.pb.go` |
 
                   Validation at every boundary derives from the SAME schema: ingress — `sharedCueSchema` (`charly/cue_schema.go`, the `#NodeDoc` load gate) + `validateKindValueCUE`; plugin inputs — `registerPluginUnitSchema` + `validateAuthoredPluginInput` (`/charly-internals:plugin`); migrations — the declarative table `candy/plugin-migrate/migrations.cue` (`/charly-build:migrate`); egress — the files charly WRITES (`/charly-internals:egress`).
@@ -6624,7 +6620,7 @@ go-quality-skill:
 
             ## R10 gate by change class (the commit gate)
 
-            `go test ./...` + `golangci-lint run` + `./scripts/bootstrap-charly.sh` are smoke, not the gate — the gate is `charly check run <bed>` on the bed(s) that exercise the change, disposable-only, fresh-rebuild, zero warnings, pasted proof. The bed-selection matrix (incl. cross-cutting fan-out by owner) is owned by `/charly-check:check` "R10 gate by change class"; see also `/charly-internals:cutover-policy`.
+            `go test ./...` + `golangci-lint run` + `scripts/bootstrap-charly.sh` are smoke, not the gate — the gate is `charly check run <bed>` on the bed(s) that exercise the change, disposable-only, fresh-rebuild, zero warnings, pasted proof. The bed-selection matrix (incl. cross-cutting fan-out by owner) is owned by `/charly-check:check` "R10 gate by change class"; see also `/charly-internals:cutover-policy`.
 
             **A mechanical pre-commit backstop exists in SOME harnesses, and is separate from the R10
             gate.** The `pre-commit-gate.sh` hook (`.claude/hooks/`) runs the CONFIGURED `golangci-lint
@@ -7996,7 +7992,7 @@ plugin-skill:
                   - List the candy in `compiled_plugins:` (the embedded `charly/charly.yml` for the default binary; a
                     consumer's own `charly.yml` for a custom footprint — "which plugins are in the binary" is a normal
                     candy-inclusion choice).
-                  - `pluginsgen` (`charly/internal/pluginsgen`, run by `./scripts/bootstrap-charly.sh` before `go build`, `GOWORK=off`,
+                  - `pluginsgen` (`charly/internal/pluginsgen`, run by `scripts/bootstrap-charly.sh` before `go build`, `GOWORK=off`,
                     stdlib+yaml only) reads `compiled_plugins:` and emits `charly/plugins_generated.go` (one
                     `registerCompiledPlugin(<pkg>.NewProvider(), <pkg>.NewMeta())` per candy) + the repo-root `go.work`
                     (`use ./charly` + a `use ./candy/<name>` per candy, so `go build ./charly` resolves the
