@@ -4785,8 +4785,10 @@ git-workflow-skill:
                   - **`charly task harness`** (`verb:file-parity`): the root harness config mirrors
                     the source repo's; keep it in sync, never fork it silently (AGENTS.md rule 8).
                   - **`charly task map`**: list every submodule with its pin and sync state.
-                  - **`charly task skills`** → `scripts/sync-dispatcher.sh`: splice the generated R0
-                    dispatcher from the pinned marketplace into `AGENTS.md`.
+                  - **`charly task skills`** → the retained umbrella helper
+                    `scripts/sync-dispatcher.sh` (a PR-body/dispatcher generator invoked BY the
+                    task, not a generic maintenance sweep the plugin verbs cover): splice the
+                    generated R0 dispatcher from the pinned marketplace into `AGENTS.md`.
 
                   ### Policy B (the pinning contract)
 
@@ -5570,7 +5572,7 @@ go-skill:
 
             ## Overview
 
-            The `charly` CLI is a Go program in the `charly/` directory. It uses the Kong CLI framework, go-containerregistry for OCI operations, and YAML parsing for configuration. All computation, validation, and building logic lives in Go. The ONE non-charly entrypoint is `scripts/bootstrap-charly.sh`; everything else is a `kind: task` in `charly.yml` run via `charly task`.
+            The `charly` CLI is a Go program in the `charly/` directory. It uses the Kong CLI framework, go-containerregistry for OCI operations, and YAML parsing for configuration. All computation, validation, and building logic lives in Go. The non-charly entrypoint is the bootstrap build `scripts/bootstrap-charly.sh`; the repository's maintenance surface is the `kind: task` entities in `charly.yml`, run via `charly task`. (A few umbrella-only helper scripts that generate PR bodies / splice the dispatcher are invoked BY those tasks.)
 
             ## Reference Index
 
@@ -5833,7 +5835,7 @@ go-skill:
 
             ## Style Guide
 
-            - All logic belongs in Go. The only non-charly entrypoint is the bootstrap build (`scripts/bootstrap-charly.sh`).
+            - All logic belongs in Go. The non-charly entrypoint is the bootstrap build (`scripts/bootstrap-charly.sh`).
             - Bootstrap build only (shell), Go for all other logic.
             - Test files alongside source files (`foo.go` -> `foo_test.go`).
 
@@ -7693,7 +7695,7 @@ plugin-skill:
             - `go test ./...` — the registry/transport/schema seams (`TestPluginGRPCRoundTrip`,
               `TestExternalPluginEndToEnd` proves the schema travels over RPC, `TestPluginSchemaSpliceValidation`,
               `TestBuiltinPluginSchemasSplice` is the CI gate that every builtin schema splices).
-            - `charly task cue-gen` — regenerates spec + every plugin's params; reproducible (a second run is a no-op).
+            - `charly task cue-gen` — regenerates the spec module's own types in the spec repo; each plugin's `params` package is regenerated in its OWN repo by the same pipeline. Both are reproducible (a second run is a no-op).
             - `charly box validate` — the candy + `plugin:` block (`candy/plugin-box/validate_rules.go`'s
               `IsPlugin` check — an explicit, documented 1:1 port of the former core `validatePluginCandy`, deleted
               as dead code in the dead-code-radical-removal batch once its call site moved here —
