@@ -1039,8 +1039,7 @@ agents-skill:
                   conflating the host binary with a worktree's own build is the single most
                   common way an in-flight cutover leaks onto shared host state.
 
-                  - **Two binaries, two roles.** Per-worktree `bin/charly` — built via `task
-                    build:binary` (a CalVer-stamped build, gitignored, no install step) — is
+                  - **Two binaries, two roles.** Per-worktree `bin/charly` — built via `scripts/bootstrap-charly.sh` (a CalVer-stamped build, gitignored, no install step) — is
                     the dev binary: every teammate
                     uses its own worktree's `./bin/charly` for every charly verb. The
                     host-installed `charly` is a distro-native package
@@ -1145,8 +1144,7 @@ agents-skill:
                     produced both an orphaned libvirt domain and a stale-binary guard trip
                     at the same time — see "Handling a long-running bed" below for the
                     launch-mechanism half of the same failure.)
-                  - **Side-effects (documented elsewhere — pointers, not copies).** `task
-                    build:binary` writes ONE path, the repo-root `bin/charly`; the charly-dev
+                  - **Side-effects (documented elsewhere — pointers, not copies).** `scripts/bootstrap-charly.sh` writes ONE path, the repo-root `bin/charly`; the charly-dev
                     candy copies that file directly, so a manual `go build -o bin/charly` is
                     equivalent and there is no sync step to forget — see
                     `/charly-internals:go` "Quick Reference" + `/charly-tools:charly`. It
@@ -1522,8 +1520,7 @@ agents-skill:
                      an unstamped binary that reports version `unknown` and fails every bed
                      step asserting the CalVer stamp (a `vm:` bed pushes the host binary
                      into the guest and asserts `charly version` there, so an unstamped
-                     binary fails the guest witness). This trap has recurred — `task
-                     build:binary` (never a bare `go build -o`) is the only sanctioned way
+                     binary fails the guest witness). This trap has recurred — `scripts/bootstrap-charly.sh` (never a bare `go build -o`) is the only sanctioned way
                      to produce a per-worktree binary; a plain `go build` is a silent gate
                      defect that surfaces only at the guest stamp assertion, deep into a
                      long VM bed. Scheduling rule when overlapping gates: the same bed name
@@ -2752,8 +2749,8 @@ egress-skill:
               the single source for the Go param structs that config decodes into — the
               `@go()`-annotated `spec/schema/*.cue` GENERATE the `spec/spec` param structs via
               `charly task cue-gen` (`cue exp gengotypes`, run in the spec repo — the spec module is
-              consumed from the module proxy at the pinned require version, so the superproject
-              task regenerates only the plugin params), kept honest by the reproducibility + parity tests. Owned by `/charly-build:validate`; the schema-change codegen
+              consumed from the module proxy at the pinned require version; each plugin's own
+              `params` package is generated in ITS repo via the same pipeline), kept honest by the reproducibility + parity tests. Owned by `/charly-build:validate`; the schema-change codegen
               recipe is `/charly-internals:go` "Updating Go code when an ingress CUE schema
               changes".
             - **Egress** (`candy/plugin-fleet/egress.go`, this skill): validates the OUTPUT config charly
@@ -4802,8 +4799,8 @@ git-workflow-skill:
                   ### Umbrella rules that change how you commit here
 
                   - **Never edit inside a submodule.** All change lands via a PR to the OWNING
-                    repo; the umbrella only records gitlinks. A dirty submodule fails `task
-                    verify` and is a review blocker. Worked model: a cross-repo cutover edits
+                    repo; the umbrella only records gitlinks. A dirty submodule fails
+                    `charly task verify` and is a review blocker. Worked model: a cross-repo cutover edits
                     `spec`, `plugin-vm`, `plugin-migrate` each on its OWN branch + PR; the
                     umbrella's gitlinks are bumped afterwards by `charly task sync`.
                   - **Run submodule git through `git -C <absolute-path>` from the umbrella
@@ -5817,8 +5814,7 @@ go-skill:
             See the project rulebook's R9 mandate (`CLAUDE.md`/`AGENTS.md`). Applied to the `charly` toolchain:
 
             - **Syncing source does not rebuild the binary.** Syncthing / git / rsync move
-              *source* between hosts. After pushing code, rebuild on the target — `task
-              build:binary` in that checkout — and verify `./bin/charly version` matches what
+              *source* between hosts. After pushing code, rebuild on the target — `scripts/bootstrap-charly.sh` in that checkout — and verify `./bin/charly version` matches what
               you built — if the version is old, the fix under test isn't really under test.
               The freshness guard (`/charly-internals:agents` "The charly binary in a
               multi-teammate / multi-worktree setup") catches a stale invoked binary against
@@ -5940,8 +5936,7 @@ go-skill:
                      which symbols currently route through which file, grep the actual file
                      instead) — either way, a hand-referenced field that no longer has a
                      matching spec field (name + wire-key + type) FAILS the build at that surface.
-                     (b) `TestGenReproducible` proves the generated files match a fresh `task
-                     cue:gen`. (c) The reserved-word bijection gate proves the kind/verb/method
+                     (b) `TestGenReproducible` proves the generated files match a fresh `charly task cue-gen`. (c) The reserved-word bijection gate proves the kind/verb/method
                      wiring matches CUE. New kind also needs its `spec/schema/<kind>.cue` `#<Kind>` def
                      (reusing the shared defs in `_common.cue`) + a one-line `cue_kind_<kind>.go`
                      `registerCueKind` registration + a corpus-test entry
