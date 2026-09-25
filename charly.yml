@@ -1516,7 +1516,7 @@ agents-skill:
                      `box/<distro>`'s own in-submodule beds do need that submodule inited —
                      box-specific work, not the cross-cutting root roster.) Never install to
                      the host from a worktree — the host-install boundary above is absolute,
-                     and no `task` target does it anyway. **The per-worktree binary must be
+                     and no maintenance task does it anyway. **The per-worktree binary must be
                      CalVer-stamped** — build it with `./scripts/bootstrap-charly.sh`, which passes
                      `-ldflags "-X main.BuildCalVer=<calver>"`; a bare `go build -o` yields
                      an unstamped binary that reports version `unknown` and fails every bed
@@ -3672,7 +3672,7 @@ git-workflow-skill:
             Skill Dispatcher routes its pinning/gitlink row to this skill, and the umbrella
             `AGENTS.md` names them as the sanctioned path for that maintenance work
             ("Umbrella-native mechanics are the sanctioned path for umbrella work"). A charly
-            end-user never sees `task`; they are the umbrella's own `charly task` entities.
+            end-user never sees them; they are the umbrella's own `charly task` entities.
 
             Inside the umbrella checkout the umbrella `AGENTS.md` governs (rule 7: read the
             subrepo's own rulebook before touching it; `charly/AGENTS.md` owns R0–R10 inside
