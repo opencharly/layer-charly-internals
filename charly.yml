@@ -50,7 +50,7 @@ agents-skill:
 
             | Topic | Reference |
             |---|---|
-            | Primitives per harness (Claude Code / Codex / Kimi); when to use a sub-agent vs. dynamic workflow vs. agent team; the charly agent roster (executors/enforcers); the shipped workflows (`/verify-beds`, `/audit-deploy-configs`, `/triage-check-failure`, `/verify-status`); the agent-team primitive setup | `references/agent-roster.md` |
+            | Primitives per harness (Claude Code / Codex / Kimi); when to use a sub-agent vs. dynamic workflow vs. agent team; the charly agent roster (executors/enforcers); the shipped workflows (`/audit-deploy-configs`, `/triage-check-failure`, `/verify-status`); the agent-team primitive setup | `references/agent-roster.md` |
             | The default multi-agent execution model: orchestrator/teammate model-tier split, maximum parallelization, the slot budget, concurrent landing, the orchestrator's bidirectional verification duty, architectural-integrity ownership, the responsibility matrix and tie-breakers | `references/orchestration-model.md` |
             | Program-wide alignment: the north-star protocol, the IOU register, per-merge measurement, migration-ledger discipline, crossed-ruling reconciliation, brief verification and stop-and-respawn, whack-a-mole escalation | `references/program-discipline.md` |
             | Bed-scoped parallel real-deployment testing: the concurrency ceilings (store lock, exclusive-resource tokens, long-bed ownership, in-tree build artifacts, per-worktree binaries) and their fixes; the charly binary in a multi-worktree setup; the binding rule for running a bed; implementation-workflow shape; speed levers | `references/parallel-bed-testing.md` |
@@ -235,25 +235,17 @@ agents-skill:
 
                   ## The shipped workflows (`.claude/workflows/`)
 
-                  - **`/verify-beds [bed …]`** — the commit-gating fan-out for the beds a
-                    sub-agent can own. It runs the **short** beds in parallel via
-                    `parallel()`, bounded by the runtime's concurrent-agent ceiling (KVM/
-                    libvirt are multi-tenant, podman builds distinct image tags
-                    concurrently), and aggregates pass/fail. It **defers** every long bed — a
-                    `vm`/`android` substrate, or any bed whose newest
-                    `.check/<bed>/<calver>/summary.yml` records `total_seconds >= 600` —
-                    returning them in `deferredLongBeds[]` with the exact command, because an
-                    `agent()` sub-agent cannot own a bed that outlives its turn; the
-                    persistent session runs each as a `run_in_background` task. It
-                    **refuses** every host-local bed (a `local:` deploy, or a bed with a
-                    nested `local:` member, whose `host:` is `local`) — those apply candies
-                    to the operator's workstation and belong in a disposable eval VM.
-                    Deferrals, refusals, and missing-host-prereq skips are all logged and
-                    returned; `gateComplete: false` means the roster is partial and is not a
-                    green R10 gate. An edited `.claude/workflows/*.js` is not what
-                    `Workflow({name})` runs — the registry is snapshotted at session start.
-                    Drive an edited workflow with `Workflow({scriptPath})`, which takes
-                    precedence.
+                  - **The bed roster is now NATIVE, not a workflow.** A whole-roster run is a
+                    `kind:check-roster` entity: `charly check run <roster>`. The plugin engine
+                    (candy/plugin-check) enumerates every disposable bed (namespace-qualified),
+                    runs them on a bounded `lanes` worker pool, serializes beds sharing an
+                    `requires_exclusive:`/`requires_shared:` token, refuses host-local beds by
+                    default, and aggregates honest exit codes. The former `/verify-beds` agent
+                    workflow is DELETED — the classifier (host-local refusal, token
+                    serialization, bounded parallelism) lives in the engine, not a workflow. An
+                    edited `.claude/workflows/*.js` is not what `Workflow({name})` runs — the
+                    registry is snapshotted at session start; drive an edited workflow with
+                    `Workflow({scriptPath})`, which takes precedence.
                   - **`/audit-deploy-configs [image|deploy …]`** — validates, runs `charly
                     check box` and optionally `charly check live`, and calls `deploy-verifier`
                     over a set of deploy configs; aggregates a health report.
@@ -271,8 +263,8 @@ agents-skill:
                     deploy-scope assertion that bed proves; the persistent session owns each
                     run as a `run_in_background` task, and the `local` bed runs inside the
                     disposable eval VM, never on the host. `gateComplete` is `false` by
-                    construction. The bed-safety classifier lives in one place —
-                    `/verify-beds` — and is not duplicated here.
+                    construction. The bed-safety classifier lives in one place — the native
+                    `kind:check-roster` engine — and is not duplicated here.
 
                   ## Agent teams (experimental — enabled in committed settings)
 
@@ -1105,9 +1097,9 @@ agents-skill:
                     VM bed stages the worktree `charly` into the guest over
                     `kit.EnsureCharlyInGuest`. A guard trip (or any surprising behavior) on a
                     host-local bed while doing worktree work means you picked the wrong bed
-                    class — never a signal to install anything (consistent with
-                    `/verify-beds`'s blanket refusal of host-local beds, motivated there by
-                    workstation safety).
+                    class — never a signal to install anything (consistent with the
+                    native `kind:check-roster` engine's default refusal of host-local beds,
+                    motivated there by workstation safety).
                   - **Invoking `./bin/charly` directly is not sufficient for beds whose plan
                     steps shell out to bare `charly`.** The outer invocation's binary does
                     not propagate to an inner bare-`charly` subprocess a bed's own
@@ -1182,7 +1174,7 @@ agents-skill:
                     deploys.
                   - **The commit is gated, not the run.** The git commit happens only after
                     a full live test of everything — the final code, on `disposable: true`
-                    beds — passes and is pasted. Running `/verify-beds`, `check-bed-runner`,
+                    beds — passes and is pasted. Running a roster (`charly check run <roster>`), `check-bed-runner`,
                     or any `charly check run` throughout development — in parallel or in the
                     background, to validate assumptions before you change and to diagnose
                     errors — is encouraged. A run that passes on an intermediate state
@@ -1465,7 +1457,7 @@ agents-skill:
                      from a killed claimant is cleared with `charly preempt restore`, not by
                      racing it).
                   4c. **A parallel long-bed roster is owned by the persistent session as N
-                     `run_in_background` tasks — never the sub-agent `/verify-beds` workflow
+                     `run_in_background` tasks — never an agent-workflow fan-out
                      for beds over 600s.** A sub-agent's internal `charly check run` is one
                      foreground call (600s-capped), so a VM/GPU bed that outruns 600s is
                      killed mid-run while a sub-agent holds it (a "still running when forced
