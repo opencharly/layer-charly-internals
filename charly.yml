@@ -2194,7 +2194,7 @@ cutover-policy-skill:
             ## Required for every breaking change
 
             - A new **migration-table entry** in `candy/plugin-migrate/migrations.cue` (a declarative `ops:` list, or an `apply:` `goHooks` hook for a structural reshape) PLUS a matching `#SchemaVersion` bump in `spec/schema/version.cue` (the spec repo — landed + tagged first, see `/charly-build:migrate`), applied via `charly task cue-gen`; the entry's CalVer is strictly greater than the current HEAD. Every cutover is one idempotent step applied by the op-walker on the one `charly migrate` command — there are no per-cutover sub-verbs. Running `charly migrate` twice is a no-op. See `/charly-build:migrate`.
-            - A **fresh release git tag** `v<YYYY.DDD.HHMM>` — ONE per merge, applied by the org-wide `tag-on-merge` workflow at MERGE from the current UTC merge time (never by the author at push time; author-time stamps collide/mis-order across concurrent PRs), **decoupled** from the `charly.yml` `version:` field (the schema version, bumped only when a cutover raises `#SchemaVersion`). Tag EVERY landing, including one that does NOT bump `version:` (content removal — a submodule extraction, an image drop). Tags are **immutable** — only ever added, never moved or force-pushed. Every component is fixed-width zero-padded (4-digit year, 3-digit day-of-year, 4-digit HHMM) so tags sort chronologically under a plain alphanumeric sort; tag-on-merge computes `v$(date -u +%Y.%j.%H%M)` at merge. Every repo (superproject, `box/<distro>`, `plugins`, `docs`) is tagged on its own merged HEAD — the tag marks the merge, not the schema, so no `charly.yml` is required; `sdk` ALONE uses its Go-module `v0.<YYYYDDD>.<HHMM leading-zeros-stripped>` scheme (a semver requirement, not an exemption). See `/charly-build:migrate` "Per-merge release git tags", `/charly-internals:git-workflow` "CalVer", and the project rulebook "Post-Execution Policies".
+            - A **fresh release git tag** `v<YYYY.DDD.HHMM>` — ONE per merge, applied by the org-wide `tag-on-merge` workflow at MERGE from the current UTC merge time (never by the author at push time; author-time stamps collide/mis-order across concurrent PRs), **decoupled** from the `charly.yml` `version:` field (the schema version, bumped only when a cutover raises `#SchemaVersion`). Tag EVERY landing, including one that does NOT bump `version:` (content removal — a submodule extraction, an image drop). Tags are **immutable** — only ever added, never moved or force-pushed. Every component is fixed-width zero-padded (4-digit year, 3-digit day-of-year, 4-digit HHMM) so tags sort chronologically under a plain alphanumeric sort; tag-on-merge computes `v$(date -u +%Y.%j.%H%M)` at merge. Every repo (superproject, `box/<distro>`, `plugins`, `docs`) is tagged on its own merged HEAD — the tag marks the merge, not the schema, so no `charly.yml` is required; the proxy-consumed root-module repos (`sdk`, `spec`, `plugin-gh`) use their Go-module `v0.<YYYYDDD>.<HHMM leading-zeros-stripped>` scheme instead (a semver requirement, not an exemption). See `/charly-build:migrate` "Per-merge release git tags", `/charly-internals:git-workflow` "CalVer", and the project rulebook "Post-Execution Policies".
             - **Hard load-time errors** for any residual legacy field, with a one-line remediation hint pointing at the migration command.
             - **Deletion — in the same PR** — of every Go type, function, CLI flag, OCI label, YAML field, skill doc paragraph, and test fixture that references the removed surface.
             - **Relocation step-sequence PARITY (when the cutover relocates a dispatcher, orchestrator, or runner).** Before relocating, ENUMERATE the original's per-CLASS behavior arms — e.g. bring-up / update / teardown × each substrate or shape class — and PROVE each class's step sequence matches the original in the relocated code. Fixing one arm of a class while missing its siblings is the CHARACTERISTIC relocation defect: a generic fallback that silently mis-handles a special class passes every unit test and fails ONLY on that class's live bed. The acceptance roster MUST therefore carry a bed per SPECIAL class (a gate that cannot fail on the class proves nothing — see `/charly-check:check` "R10 gate by change class").
@@ -3745,6 +3745,9 @@ git-workflow-skill:
             - `marketplace/scripts/pr_state_watch.sh` — the terminal-state PR poll (stop, never loop).
             - `opencharly/.github/scripts/org-ruleset.sh` — the sole organization-wide owner
               of the ONE branch ruleset (required workflow + branch rules) apply/verify.
+            - `/charly-internals:repo-setup` — the org/dotgithub configuration, the landing
+              automation (required workflow, native auto-merge, tag-on-merge CalVer), and the
+              new-repo setup checklist.
             - `/charly-internals:cutover-policy` — one-phase, atomic-commit, R10-at-the-end.
             - `/charly-build:migrate` — `version:` ↔ tag coupling, per-merge tags, push order.
             - `/charly-build:reconcile` — cross-repo `@github` pin alignment used by B6.
@@ -4049,6 +4052,46 @@ git-workflow-skill:
                     Git alternate instead of duplicating object packs. Verify the alternate and the
                     exact gitlink before use; never compensate with `/tmp`, a user cache, or an
                     unrelated recursive submodule checkout.
+
+                  ## B8 — after the PR merges: the close-out checklist (landed repo → umbrella)
+
+                  A landing is NOT finished at the merge. Close the loop in the landed repo AND
+                  keep the umbrella consistent. Edge cases live in B4; this is the ordered
+                  sequence.
+
+                  **Where the session worktree lives — standalone clone vs umbrella (the ONE
+                  difference).** In a normal clone of a repo (`charly`, a plugin, `docs`, …) it
+                  is `.claude/worktrees/<slug>/` (B1 step 0). In the UMBRELLA
+                  (`opencharly/opencharly`, the ~400-submodule view) it is
+                  `<umbrella>/.worktrees/<slug>/<repo>/`, and the umbrella's TRACKED submodule
+                  checkouts stay DETACHED at their recorded gitlinks.
+
+                  **In the landed repo:**
+                  1. Confirm merged: `gh pr view <n> --repo <owner>/<repo> --json state,mergedAt`
+                     → `MERGED`. Never clean up an unmerged PR.
+                  2. Remove YOUR worktree (clean status first): `git -C <repo> worktree remove
+                     .claude/worktrees/<slug>`. Another session's worktree is theirs — never
+                     remove it.
+                  3. Delete the local branch ONLY if merged: `git branch --merged main` must list
+                     it, then `git branch -d feat/<slug>`. NEVER `-D` an unmerged/abandoned
+                     branch without operator sign-off — it may hold unlanded work.
+                     `delete_branch_on_merge` already deleted the REMOTE branch;
+                     `git fetch --prune` drops the stale remote-tracking ref.
+                  4. Fast-forward the local default branch (`main`) ONLY: `git fetch origin
+                     --prune --tags && git switch main && git merge --ff-only origin/main`. If it
+                     cannot fast-forward, STOP and RCA (R1) — never force-reset a diverged main.
+
+                  **In the umbrella:**
+                  5. Remove your umbrella worktree after its PR merged: `git -C <umbrella>
+                     worktree remove .worktrees/<slug>/<repo>`.
+                  6. Fast-forward the umbrella's own `main` (same ff-only rule).
+                  7. Advance pins ONLY with `charly task sync`, prove with `charly task verify`,
+                     and land the bump as a normal `feat/` PR
+                     (`chore(sync): bump submodule pins …`). A submodule pin is a GITLINK: its
+                     checkout stays DETACHED at the recorded commit — NEVER `git -C <sub>
+                     checkout main` / `git -C <sub> reset --hard origin/main` to "catch up" (that
+                     dirties the umbrella and fails `verify`). Setting up a NEW repo is
+                     `/charly-internals:repo-setup`.
 
             - name: multi-repo-coordination
               content: |+
@@ -4646,14 +4689,14 @@ git-workflow-skill:
                     bypass actor for the single CHANGELOG path); then tag the merged HEAD —
                     `git tag -a v$VER -m "<subject>" <merged-HEAD>` and
                     `git push origin refs/tags/v$VER` (every repo;
-                    `sdk` substitutes its Go-module `v0.<…>` form). A schema cutover's
+                    `sdk`, `spec`, and `plugin-gh` substitute their Go-module `v0.<…>` form). A schema cutover's
                     `#SchemaVersion` + `version:` + `migrations.cue` re-stamp stays strictly above
                     the current HEAD.
 
                   One fresh stamp per merge, immutable (only ever added), independent of `charly.yml`
                   `version:` (the schema version, bumped only by a cutover raising `#SchemaVersion`).
                   Every repo (superproject, `box/<distro>`, `plugins`, `docs`) mints `v$VER` on its
-                  merged HEAD; `sdk` alone uses its Go-module `v0.<YYYYDDD>.<HHMM
+                  merged HEAD; `sdk`, `spec`, and `plugin-gh` (the proxy-consumed root-module repos) use their Go-module `v0.<YYYYDDD>.<HHMM
                   leading-zeros-stripped>` scheme (not an exemption — Go modules require semver, which
                   forbids a leading-zero segment — `0733`→`733`). A YAML schema/format change does
                   both: the schema bump and the tag. See `/charly-build:migrate`.
@@ -9518,3 +9561,106 @@ marketplace-skill:
             Invoke before editing any skill source, bumping a refs-list pin, running `charly
             marketplace generate`, reviewing a refresh/drift failure, or answering "why is my
             skill/agent stale in my harness".
+repo-setup-skill:
+    skill:
+        name: repo-setup
+        family: internals
+        owner: charly-internals
+        description: |-
+            How the opencharly GitHub org and opencharly/.github (dotgithub) configuration and workflows drive every repository — the ONE org ruleset, the org-required `charly/pr-validator` workflow, native auto-merge, tag-on-merge CalVer, and the per-repo settings. Use when setting up a NEW repository, adding or explaining landing/CI workflows, or distinguishing what the org configures automatically from what a repo must add.
+
+        triggers:
+            - "Set up a new repository in the opencharly org (required workflows, ruleset, auto-merge, CalVer tags)"
+            - "How the org ruleset / dotgithub workflows / native auto-merge / tag-on-merge CalVer work"
+        content: |
+            # repo-setup — the opencharly org, dotgithub config, and new-repo setup
+
+            This skill is the companion to `/charly-internals:git-workflow`: git-workflow
+            owns the AUTHOR's branch/PR discipline; repo-setup owns the ORG-LEVEL
+            configuration that discipline relies on and the checklist for standing up a
+            NEW repository.
+
+            ## The org model (verified against the live settings)
+
+            - The `opencharly` org is on GitHub **Team**, so org **rulesets** and the
+              `workflows` rule ("Require workflows to pass") are available.
+            - ONE organization branch ruleset named
+              `org-wide required workflow & main protection` is the single source of main
+              protection and the required workflow. It targets `~ALL` repositories MINUS an
+              explicit exclude set, on `refs/heads/main`, and carries:
+              * `workflows` — requires
+                `opencharly/.github/.github/workflows/org-wide-pr-validator-required.yml@refs/heads/main`
+                (read from the `.github` repo at the pinned ref);
+              * `required_status_checks` — `strict: true`, exactly ONE context
+                `validate / validate`;
+              * `non_fast_forward`, `deletion`, `creation`.
+              The ONLY bypass actor is the `charly-auto-merge` GitHub App (its protected-main
+              CHANGELOG writes must land). There is NO human bypass and NO `pull_request`
+              review rule — the validator IS the gate.
+            - Owner script: `opencharly/.github/scripts/org-ruleset.sh` (`apply` / `verify`).
+              It creates/updates the ruleset, deletes redundant per-repo rulesets and any
+              surviving legacy branch protection, and enforces the two settings that have NO
+              org-level default: `allow_auto_merge=true` and `delete_branch_on_merge=true`.
+            - The target set is `discover_repos` in `scripts/lib-org.sh`: **active,
+              non-fork, default branch `main`**. Everything else is `discover_excludes`
+              (forks, archived, non-`main` defaults) and receives NEITHER the org workflow
+              NOR CalVer tags — by design, not by omission.
+
+            ## What happens automatically on every PR (the landing chain)
+
+            1. A PR is opened/updated → the org ruleset runs
+               `org-wide-pr-validator-required.yml` in the TARGET repo's context (definition
+               from `opencharly/.github` at the pinned ref) → it calls the reusable
+               `pr-validator.yml` → the single required check `validate / validate`.
+            2. On a PASS verdict the validator enables GitHub **native auto-merge (squash)**
+               inline — there is NO separate auto-merge workflow. `main` is squash-only.
+            3. After the merge, the PER-REPO caller `.github/workflows/tag-on-merge.yml`
+               fires (on `workflow_run` of `charly/pr-validator` + `push` to main) → calls the
+               org reusable `tag-on-merge.yml`, which mints the CalVer tag
+               `v<YYYY>.<DDD>.<HHMM>` at the merge commit and writes `CHANGELOG/<CalVer>.md`
+               from the merged PR body (the body IS the changelog). Proxy-consumed root
+               modules (`sdk`, `spec`, `plugin-gh`) get the Go-module `v0.<YYYYDDD>.<HHMM>`
+               form instead.
+            4. A body-only fix after the head was pushed needs NO empty commit: add the
+               `rerun` label; the org `rerun.yml` sweep re-runs the failed run in place.
+
+            ## Setting up a NEW repository (checklist)
+
+            1. Create `opencharly/<name>` (non-fork; it must end up on default branch `main`).
+               The org ruleset then covers it automatically — no per-repo branch rules.
+            2. Add the per-repo `.github/workflows/tag-on-merge.yml` caller — REQUIRED for
+               CalVer tags and the CHANGELOG — plus the appropriate `deploy.yml`. The
+               org-required validator needs NO per-repo file (the old `pr-validator.yml`
+               dispatcher is retired by `retire-per-repo-dispatchers.yml`).
+            3. The org owner applies the ONE org ruleset (the `org-ruleset.sh` owner script
+               in `opencharly/.github`, `apply` mode — an operator/CI action, not a charly
+               user command) so `allow_auto_merge` and `delete_branch_on_merge` are enforced
+               for the new repo.
+            4. Land the first commit via a PR — never a direct push to `main`.
+            5. Add it to the umbrella as a submodule and advance the pin via
+               `charly task sync` + PR (see `/charly-internals:git-workflow` B8).
+
+            ## The measured gap this checklist prevents
+
+            A repo created WITHOUT the `tag-on-merge.yml` caller still MERGES (the org
+            workflow validates it) but NEVER gets a CalVer tag: measured on
+            `layer-nerdctl` and `plugin-nerdctl` (no `.github` directory at all; their two
+            `v2026.266.*` tags were minted manually). Excluded BY DESIGN (no tag expected):
+            `gst-wayland-display` (a fork), `pixelflux` (a vendored upstream on non-`main`
+            default `av1`), `omarchy-eval-artifacts` (a `runs`-branch artifact sink), and the
+            archived `pi-review-action`.
+
+            ## Cross-References
+
+            - `/charly-internals:git-workflow` — the author's branch/PR/landing discipline and
+              the after-merge close-out checklist (B8).
+            - `opencharly/.github` — `scripts/org-ruleset.sh`, `scripts/lib-org.sh`,
+              `scripts/retire-per-repo-dispatchers.sh`, and the workflows
+              `org-wide-pr-validator-required.yml`, `pr-validator.yml`, `tag-on-merge.yml`,
+              `tag-on-merge-dispatcher.yml`, `rerun.yml`, `bootstrap-repo-main.yml`.
+
+            ## When to Use This Skill
+
+            Invoke when creating or onboarding a repository in the opencharly org, when adding
+            or changing CI/landing workflows, or when explaining what the org ruleset and
+            dotgithub workflows do automatically versus what each repo must configure.
