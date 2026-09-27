@@ -4077,8 +4077,8 @@ git-workflow-skill:
                   5. Remove your umbrella worktree after its PR merged: `git -C <umbrella>
                      worktree remove .worktrees/<slug>/<repo>`.
                   6. Fast-forward the umbrella's own `main` (same ff-only rule).
-                  7. Advance pins ONLY with `./charly/bin/charly task sync`, prove with
-                     `./charly/bin/charly task verify`, and land the bump as a normal `feat/` PR
+                  7. Advance pins ONLY with `charly task sync`, prove with `charly task verify`,
+                     and land the bump as a normal `feat/` PR
                      (`chore(sync): bump submodule pins …`). A submodule pin is a GITLINK: its
                      checkout stays DETACHED at the recorded commit — NEVER `git -C <sub>
                      checkout main` / `git -C <sub> reset --hard origin/main` to "catch up" (that
@@ -9623,12 +9623,13 @@ repo-setup-skill:
                CalVer tags and the CHANGELOG — plus the appropriate `deploy.yml`. The
                org-required validator needs NO per-repo file (the old `pr-validator.yml`
                dispatcher is retired by `retire-per-repo-dispatchers.yml`).
-            3. Run `opencharly/.github/scripts/org-ruleset.sh apply` (or dispatch its
-               workflow) so `allow_auto_merge` and `delete_branch_on_merge` are enforced for
-               the new repo.
+            3. The org owner applies the ONE org ruleset (the `org-ruleset.sh` owner script
+               in `opencharly/.github`, `apply` mode — an operator/CI action, not a charly
+               user command) so `allow_auto_merge` and `delete_branch_on_merge` are enforced
+               for the new repo.
             4. Land the first commit via a PR — never a direct push to `main`.
             5. Add it to the umbrella as a submodule and advance the pin via
-               `./charly/bin/charly task sync` + PR (see `/charly-internals:git-workflow` B8).
+               `charly task sync` + PR (see `/charly-internals:git-workflow` B8).
 
             ## The measured gap this checklist prevents
 
