@@ -3750,11 +3750,45 @@ git-workflow-skill:
             the verdict, fix, re-finalize the body, push a NEW commit — never re-dispatch the
             same head to "see if it clears". Bounded knobs: `--interval`, `--timeout`.
 
+            ### Watching a whole PR batch (`pr_watch_many.sh`)
+
+            A producer-first landing is a CHAIN of PRs across repos. Watching the batch
+            one PR at a time re-introduces the hand-rolled loop the rulebook forbids, so
+            the companion `scripts/pr_watch_many.sh` (same repo) wraps the sanctioned
+            watcher N times in parallel and STOPS on the first terminal state (or, with
+            `--all`, on every one), adding no polling logic of its own:
+
+            ```
+            pr_watch_many.sh [--interval S] [--timeout S] [--all] <owner/repo> <pr> ...
+            # → TERMINAL <STATE> (exit N) <owner/repo>#<pr>   (STATE ∈ MERGED|BLOCKED|CLOSED|TIMEOUT|ERROR)
+            ```
+
+            ### A pin that does not pin — resolve, don't assume
+
+            A `@github.com/<o>/<r>:<ref>` pin does NOT guarantee which build actually runs.
+            A raw commit-SHA ref that the local repo cache has not fetched can silently
+            fall back to a DIFFERENT ref (e.g. the repo's default-branch tag), so a build
+            that does not carry your change is served and the change appears not to work —
+            an "intermittent" failure that is really a resolution mis-selection. Rules:
+
+            - **Pin a BRANCH or a TAG, not a raw commit SHA,** for a locally-verified run
+              (`git clone --branch <ref>` resolves a branch/tag deterministically; a short
+              or unfetchable SHA can fall back).
+            - **Confirm the resolved ref from the tool's own output** before trusting a
+              result — the served ref is logged (`source …/<repo>@<ref>`); assert it names
+              the ref you pinned, every run.
+            - **A ref change with a stale cache still serves the old source.** When a run
+              appears to ignore a fix that IS in the pinned branch, clear the repo cache and
+              re-run before concluding anything.
+            - **If the pinned ref cannot be resolved, that is a defect** (fail loud, never
+              substitute) — file it on the resolver's owner.
+
             ## Cross-References
 
             - the project rulebook "Post-Execution Policies" — the mandate this skill operationalizes.
             - `marketplace/internals/agents/pr-validator.md` — the fresh evaluator's full spec.
             - `marketplace/scripts/pr_state_watch.sh` — the terminal-state PR poll (stop, never loop).
+            - `marketplace/scripts/pr_watch_many.sh` — the cross-repo PR-batch watcher (wraps the above).
             - `opencharly/.github/scripts/org-ruleset.sh` — the sole organization-wide owner
               of the ONE branch ruleset (required workflow + branch rules) apply/verify.
             - `/charly-internals:repo-setup` — the org/dotgithub configuration, the landing
