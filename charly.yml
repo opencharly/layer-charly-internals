@@ -1,7 +1,5 @@
-version: 2026.261.1747
 charly-internals:
     candy:
-        version: 2026.218.1200
         description: |-
             Concept candy owning the charly-internals contributor skills (go/plugin/agents/skills/cutover/…). Owns its family's `skill:` kind entities (sibling nodes in this file) — the
             the plugins→candies migration; candy/plugin-marketplace regenerates the marketplace
