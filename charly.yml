@@ -720,6 +720,29 @@ agents-skill:
                     `STATUS`/`RESOLVED`). Owned by `/charly-internals:git-workflow` B2b —
                     never restated here.
 
+                  ## Todo ledger & interruption safety
+
+                  The structured todo list is the session's DURABLE ledger, and an
+                  interruption must never drop in-flight work. An interruption is any new
+                  instruction that starts a fresh turn — a new user message, an automated
+                  watcher alert (a background job completing, an `opencode run --session`
+                  push), a delegated report, or a compaction. The rule:
+
+                  - **Reconcile, never reset.** On ANY new/interrupting instruction, FIRST
+                    re-write the todo list so it carries every still-open in-flight item PLUS
+                    the new one, THEN act. A list written from scratch on interruption is the
+                    failure mode this rule exists for — the earlier items vanish.
+                  - **One list, whole-picture.** The ledger is a single session-wide list; read
+                    it before acting and update it in place (the todo tool REPLACES the list,
+                    so re-state the items you are not changing).
+                  - **Long operations are ledger-first.** Before a long-running step, ensure
+                    the list names it, so a later interruption resumes from state, not memory.
+                  - **A watcher alert is an ADDITION.** An automated push adds an item; it
+                    never implies the current item is done. Bind the generic watcher
+                    (`marketplace/scripts/gh_watch.sh` — harness-independent) to a durable
+                    inbox and drain it at the start of every turn; the harness binding lives in
+                    the active harness's config (opencode: `.opencode/instructions.md`).
+
                   ## See also
 
                   - Entry: `../SKILL.md`
@@ -6064,6 +6087,26 @@ git-workflow-skill:
                   gh_watch.sh [--events merged,closed,stall] [--interval SEC] \
                               [--stallmin MIN] [--workflow NAME] <owner>/<repo>#<num> …
                   ```
+
+                  ### Delivering a wake (the harness binding)
+
+                  The generic scripts are **harness-independent**: each emits one line and
+                  exits, and re-arming is the caller's loop. How a wake REACHES the agent is
+                  the harness's job, never the script's:
+
+                  - **opencode** — no background-completion notification by default (`task` is
+                    synchronous, `bash` blocks; `OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS`
+                    opts into async tasks) and config loads once (no hot reload); the
+                    documented push is `opencode run --session <ses_…> "<alert>"`, plus a
+                    durable inbox drained each turn. Binding: `.opencode/instructions.md`.
+                  - **Claude Code** — a `run_in_background` Bash child's completion notifies the
+                    spawning session; re-arm after each wake.
+                  - **Any other harness** — bind the script's exit / `--notify-cmd` to whatever
+                    surfaces a message to the agent, and keep the durable inbox fallback.
+
+                  A wake that starts a new turn can interrupt in-flight work, so an alert is an
+                  ADDITION to the todo ledger, never a reset (`references/hooks-and-lifecycle.md`
+                  "Todo ledger & interruption safety").
 
                   ### Delta vs STATE events (`gh_watch.sh`)
 
