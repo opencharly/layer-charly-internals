@@ -6314,7 +6314,7 @@ git-workflow-skill:
                   ## The five classes (root causes)
 
                   1. **Body claims the diff does not carry** (body-truthfulness): a pasted command
-                     output that cannot reproduce (a `CLAUDE.md` sweep returning `(none)` while a
+                     output that cannot reproduce (a sweep returning `(none)` while a
                      non-excluded file still held the token); a placeholder command
                      (`<org-map check>`) instead of the executed one; a title advertising a change
                      absent from the diff.
@@ -9542,16 +9542,17 @@ skills-skill:
 
             ## Mandate in the harness rulebook, detail in the skill
 
-            The canonical split for every rule: **each harness root rulebook states the
-            equivalent mandate and points at exactly one owning skill; the owning skill
+            The canonical split for every rule: **the harness rulebook (`AGENTS.md`) states
+            the equivalent mandate and points at exactly one owning skill; the owning skill
             carries the operationalization** —
             forbidden-pattern catalogs, decision matrices, worked examples, command
             sequences. Every other document links to the owner and NEVER restates it
             (restated copies drift; the linked original cannot).
 
-            The complete harness rulebooks own the **Skill Dispatcher**, **RDD**, **ADE**,
-            and **SDD** mandates, the acceptance checklist, and AI-attribution tiers. Keep
-            their policy equivalent while preserving harness-specific tool language.
+            The harness rulebook (`AGENTS.md`) owns the **Skill Dispatcher**, **RDD**,
+            **ADE**, and **SDD** mandates, the acceptance checklist, and AI-attribution
+            tiers. Keep its policy equivalent while preserving harness-specific tool
+            language.
 
             ### Authoritative-copy registry
 
