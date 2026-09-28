@@ -3763,9 +3763,29 @@ git-workflow-skill:
             arming seeds the current comment-count / newest run id, so a pre-existing comment
             or verdict never wakes you. `merged`, `closed`, and `stall` are STATE: they fire
             while the item IS in that state — arming `merged` on an already-merged PR wakes
-            immediately (exactly how "has my blocker landed?" reads). Arm the narrowest event
-            set the wait needs (`EVENTS=comment` to be pinged the moment anyone replies to an
-            issue you commented on; `EVENTS=merged` to be told you are unblocked).
+            immediately (exactly how "has my blocker landed?" reads). STATE `stall` additionally
+            requires the item to be **open+unmerged**, so a closed/merged item never emits a
+            false `(open, unmerged)` alarm.
+
+            **Three field-learned watcher requirements — mandatory, not tips:**
+
+            - **Silence is an ALARM.** A blocked item with no pushes emits **no validator runs and
+              no events**, so an event-only watcher is blind to the worst case. Every watcher MUST
+              carry a per-item **stall/silence alarm** — no progress (no new commit, comment, or
+              completed `charly/pr-validator` run; i.e. `updated_at` unchanged) for the window
+              while the item is open+unmerged. `gh_watch.sh`'s `stall` is therefore **ON BY
+              DEFAULT**. The events tell you when something HAPPENED; the stall alarm tells you
+              when something SHOULD have and did not. (Measured: a PR sat silently unchanged for
+              ~2 hours with NO alert; the instant `stall` was armed it fired.)
+            - **Watch the OUTCOME, not every event.** Waking on every comment of an actively
+              iterating owner is noise. The DEFAULT event set is the terminal outcomes
+              (`merged`,`closed`) **plus the `stall` alarm**; add `comment`/`verdict` ONLY for a
+              wait that genuinely needs them (`EVENTS=comment` on an issue you asked a question
+              on and want the moment anyone replies).
+            - **Liveness ≠ progress.** Judge progress by **artifacts** — a pushed branch, a new
+              commit, an opened PR, a merged tag — never by a session heartbeat or "still
+              investigating". The stall alarm is the mechanism: it keys on the item's
+              `updated_at`, so its silence is measured against artifacts, not activity.
 
             **On exit 2 of `pr_state_watch.sh`, read the verdict, fix, re-finalize the body,
             push a NEW commit — never re-dispatch the same head** to "see if it clears". It is
@@ -5965,8 +5985,8 @@ git-workflow-skill:
                   pr_watch_many.sh [--repos owner/repo,…] [--interval SEC] [--stallmin MIN] \
                                    [--validator NAME] [--all] <owner>/<repo> <pr> …
 
-                  # per-item PR/issue — exit on any chosen event
-                  gh_watch.sh [--events comment,verdict,merged,closed,stall] [--interval SEC] \
+                  # per-item PR/issue — exit on any chosen event (default merged,closed,stall)
+                  gh_watch.sh [--events merged,closed,stall] [--interval SEC] \
                               [--stallmin MIN] [--workflow NAME] <owner>/<repo>#<num> …
                   ```
 
@@ -5976,7 +5996,34 @@ git-workflow-skill:
                   newest run id, so a pre-existing comment or verdict never causes a false wake.
                   `merged`, `closed`, and `stall` are STATE — they fire while the item IS in that
                   state, INCLUDING at arm time, which is why `EVENTS=merged` on an already-merged PR
-                  wakes immediately. Arm the narrowest set the wait needs; the default is all five.
+                  wakes immediately. `stall` additionally requires the item to be **open+unmerged**,
+                  so a closed/merged item never emits a false alarm.
+
+                  ### The three watcher requirements — mandatory, not tips
+
+                  These are field-learned and are ENCODED in the tools, not left to judgement:
+
+                  1. **Silence is an ALARM — every watcher carries a stall layer.** A blocked item
+                     with no pushes emits **no validator runs and no events**, so an event-only
+                     watcher is blind to the worst case. So `stall` is **ON BY DEFAULT** in
+                     `gh_watch.sh` and every watched item gets it, and `pr_watch_many.sh` grows a
+                     `--stallmin` layer alongside its new-verdict layer. The alarm fires on **no
+                     progress** — no new commit, comment, or completed `charly/pr-validator` run
+                     (`updated_at` unchanged) — for the window while the item is open+unmerged.
+                     *The events tell you when something HAPPENED; the stall alarm tells you when
+                     something SHOULD have and did not.* (Measured: an item sat silently unchanged
+                     for ~2 hours with **no alert**; the instant `stall` was armed it fired.)
+                  2. **Watch the OUTCOME, not every event.** Waking on every comment of an actively
+                     iterating owner is noise. The DEFAULT event set is therefore the terminal
+                     outcomes (`merged`,`closed`) **plus the `stall` alarm**; add `comment` /
+                     `verdict` ONLY for a wait that genuinely needs them (`EVENTS=comment` on an
+                     issue you asked a question on). Arm the narrowest set the wait needs.
+                  3. **Liveness ≠ progress.** Progress is judged by **artifacts** — a pushed
+                     branch, a new commit, an opened PR, a merged tag — never by a session
+                     heartbeat or "still investigating". The stall alarm IS that mechanism: it
+                     keys on the item's `updated_at`, so its silence is measured against artifacts,
+                     not activity. This is the same rule as B2b.1's "progress is a completed
+                     validator run", stated for a per-item watch.
 
                   A `stall` is the correct STALL/loop detector: **no new verdict within the window
                   while the scope is open+unmerged** (B2b.1). A re-arguing agent emits no new
