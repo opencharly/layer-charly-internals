@@ -3737,13 +3737,13 @@ git-workflow-skill:
 
             ## The watcher family — arm, wake, re-arm
 
-            Four generic scripts under `scripts/` in the **`opencharly/marketplace`** repo
-            (addressed as `marketplace/scripts/<name>` from the umbrella checkout) turn a
-            landing into a single background command that EXITS — and, because the harness
-            notifies the owning agent when a background command finishes, **exiting IS the
-            notification**. Arm one, act on the wake, re-arm. None of them needs a
-            `while`/`sleep` loop of your own (the R4 band-aid), and every per-PR terminal
-            decision stays `pr_state_watch.sh`'s.
+            Three generic watcher scripts under `scripts/` in the **`opencharly/marketplace`**
+            repo (addressed as `marketplace/scripts/<name>` from the umbrella checkout), plus a
+            shared helper library `_watch_common.sh` they both source, turn a landing into a
+            single background command that EXITS — and, because the harness notifies the owning
+            agent when a background command finishes, **exiting IS the notification**. Arm one,
+            act on the wake, re-arm. None of them needs a `while`/`sleep` loop of your own (the
+            R4 band-aid), and every per-PR terminal decision stays `pr_state_watch.sh`'s.
 
             | Arm this | To watch | Wake event |
             |---|---|---|
