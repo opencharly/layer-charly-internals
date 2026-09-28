@@ -42,9 +42,9 @@ agents-skill:
             The one rule that binds every reference below: **a bed run is R10-class —
             the commit is gated on a full final-code bed test (pasted), but beds run
             freely throughout to verify** (see `references/parallel-bed-testing.md`
-            "The binding rule"). The project rulebook is `CLAUDE.md` / `AGENTS.md`,
-            which carry equivalent R0–R10 policy; this skill never restates it, only
-            points to it.
+            "The binding rule"). The project rulebook is `AGENTS.md`, the single
+            harness-neutral rulebook carrying R0–R10; this skill never restates it,
+            only points to it.
 
             ## Index
 
@@ -105,7 +105,7 @@ agents-skill:
 
                   | | Claude Code | Codex | Kimi |
                   |---|---|---|---|
-                  | Rulebook | `CLAUDE.md` | `AGENTS.md` | `AGENTS.md` (read natively) |
+                  | Rulebook | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` |
                   | Skills | plugin manager (`charly-*@charly-plugins`, the opencharly/marketplace repo) | the marketplace's `.agents/marketplace/.claude-plugin/marketplace.json` catalog (Codex registers the repo by GitHub source) | kimi plugin (the whole marketplace is one plugin, installed by GitHub URL) / on-demand `Skill` tool; when not in the session listing, `Read` the marketplace repo's `<family>/skills/<name>/SKILL.md` |
                   | Sub-agents | custom agents (the marketplace's `internals/agents/*.md`, `.claude/agents/`) | fresh native agent threads (`.codex/agents/*.toml` roles, e.g. `pr-validator`) | built-in `coder` / `explore` / `plan` only — no custom subagent registry |
                   | Fresh validator / teammate | sub-agent or team teammate with the agent brief | fresh agent thread with the role toml | a fresh separate `kimi` session (interactive or `kimi -p`) briefed with the agent `.md` by path — context isolation is what makes it independent |
@@ -2157,7 +2157,7 @@ cutover-policy-skill:
 
             Every schema change, API rename, or deprecation in OpenCharly ships as a **single hard-cutover PR** — for BOTH code (Go types, exported functions, CLI flags, OCI labels) and config (charly.yml, vm.yml field names and shapes). A cutover is never phased, at plan authoring or execution, regardless of estimated time, scope, or context; the full no-exception statement and stop conditions are in "No exception clause" below.
 
-            This skill is the source of truth for the policy. The project rulebook (`AGENTS.md` / `CLAUDE.md`) links here rather than re-stating the full policy inline.
+            This skill is the source of truth for the policy. The project rulebook (`AGENTS.md`) links here rather than re-stating the full policy inline.
 
             ## One phase, many tasks, one cutover — the workflow
 
@@ -2277,7 +2277,7 @@ cutover-policy-skill:
             - **Replacement surface** — the new types / schema / deploy target that supersede the deleted ones.
             - **Migration** — one idempotent migration-table entry (`candy/plugin-migrate/migrations.cue`) that harvests legacy fields into the new shape, preserves pre-existing user keys, and never clobbers customizations.
             - **Load-time error** — old projects loading under the new code get a hard error naming the legacy field and pointing at `charly migrate`.
-            - **Documentation refresh** — every referring skill revised in the same sweep; no stale references to any deleted identifier in the marketplace corpus, `README.md`, or `AGENTS.md` / `CLAUDE.md` (R5 grep self-test).
+            - **Documentation refresh** — every referring skill revised in the same sweep; no stale references to any deleted identifier in the marketplace corpus, `README.md`, or `AGENTS.md` (R5 grep self-test).
             - **Test deletions** — fixtures and assertions exercising the legacy surface removed; new fixtures exercise the replacement.
             - **CHANGELOG entry at merge** — the merged PR's title + body are written by the
               tag-on-merge workflow to the repo's per-CalVer file `CHANGELOG/<YYYY.DDD.HHMM>.md`
@@ -2327,7 +2327,7 @@ disposable-skill:
 
             ## Why this exists
 
-            Live-deploy verification (the project rulebook R1, R10, and Risk Driven Development (`AGENTS.md` / `CLAUDE.md`)) is
+            Live-deploy verification (the project rulebook R1, R10, and Risk Driven Development (`AGENTS.md`)) is
             mandatory — and it's much easier to carry out aggressively when you can freely `destroy →
             rebuild → retest` a target without asking the user for permission
             every time. But autonomous destroy is only safe on resources whose
@@ -3550,7 +3550,7 @@ git-workflow-skill:
             `.claude/settings.json`'s PreToolUse hooks. The **R10 pass
             authorizes OPENING the PR, never a self-merge**: the two-step landing separates the
             author (who opens the PR) from the fresh validator (a check run on the same PR).
-            This skill is the mechanics; the project rulebook "Post-Execution Policies" (`AGENTS.md` / `CLAUDE.md`) carries the
+            This skill is the mechanics; the project rulebook "Post-Execution Policies" (`AGENTS.md`) carries the
             mandate, `/charly-internals:cutover-policy` the one-phase rule, `/charly-build:migrate`
             the schema-version/tag coupling, and the marketplace's `internals/agents/pr-validator.md` the
             validator's own spec.
@@ -4958,9 +4958,9 @@ git-workflow-skill:
                   2. **The auto-mode classifier — the semantic layer that fires on top.** `permissions.allow`
                      clears the *prompt* for `gh pr merge`, but the classifier's **Merge Without Review**
                      soft-block fires anyway and is **not cleared by `permissions.allow`**. With
-                     the merge rule present, superproject-rooted, and a CLAUDE.md landing statement live,
+                     the merge rule present, superproject-rooted, and an AGENTS.md landing statement live,
                      `gh pr merge --squash` was denied for both a sub-agent and the main session — verbatim:
-                     *"the merge instruction came from a coordinator agent (not the user), the CLAUDE.md
+                     *"the merge instruction came from a coordinator agent (not the user), the AGENTS.md
                      pre-authorization is manufactured classifier-steering intent … Run this outside auto
                      mode so the user can review."* The merge gate is real, separate, and stricter than the
                      status gate.
@@ -4978,8 +4978,8 @@ git-workflow-skill:
                     consent lives in the transcript, and once the transcript is summarized the classifier
                     stops seeing it — a merge that worked earlier in a session was denied after the
                     session resumed from a compaction summary.
-                  - **Not CLAUDE.md prose.** The classifier explicitly rejects a CLAUDE.md authorization as
-                    "manufactured classifier-steering intent." CLAUDE.md records
+                  - **Not AGENTS.md prose.** The classifier explicitly rejects an AGENTS.md authorization as
+                    "manufactured classifier-steering intent." AGENTS.md records
                     the policy; it does not function as classifier consent.
 
                   **An agent cannot apply the `autoMode.allow` grant itself.** Writing one's own
@@ -5048,7 +5048,7 @@ git-workflow-skill:
                   user/managed-level grant covers the action — user-level settings (e.g. the operator's
                   `autoMode.allow` rule) apply independently of project root, and a submodule-rooted
                   validator under that rule posted `success` and merged with zero denials. Superproject
-                  rooting remains the rule (project-level rules, the CLAUDE.md hierarchy, and transcript
+                  rooting remains the rule (project-level rules, the AGENTS.md hierarchy, and transcript
                   determinism are root-dependent); diagnose a denial by checking both settings layers. Do
                   not "fix" a denial by editing the rule until you have confirmed the agent's project root. See `/charly-internals:agents` "Sub-agent operational invariants"
                   for the durable-verdict-first protocol every validator must follow (a permission denial
@@ -5329,7 +5329,7 @@ git-workflow-skill:
                   **Terms.** *The gate* — whichever check a claim rests on; usually `charly box validate`,
                   `charly marketplace drift`, or `charly docs generate`. *`marketplace drift`* compares every
                   generated artifact — the `marketplace/` corpus AND the harness surface it also emits
-                  (`CLAUDE.md`, `AGENTS.md`, `.claude/settings.json`, `.claude/hooks/*`) — against what the
+                  (`AGENTS.md`, `.claude/settings.json`, `.claude/hooks/*`) — against what the
                   candy `skill:` / `hook:` / `marketplace:` sources currently project — a *candy* being an entity defined in `candy/<name>/charly.yml` —
                   exiting 1 when any differs. `charly marketplace generate` re-emits them. *Superproject* — the `opencharly/charly`
                   repo, which contains the others as submodules. *Gitlink* — the single commit sha a
@@ -6455,7 +6455,7 @@ go-skill:
 
             ## R9 — deployed binary matches source; runtime deps live in the PKGBUILD
 
-            See the project rulebook's R9 mandate (`CLAUDE.md`/`AGENTS.md`). Applied to the `charly` toolchain:
+            See the project rulebook's R9 mandate (`AGENTS.md`). Applied to the `charly` toolchain:
 
             - **Syncing source does not rebuild the binary.** Syncthing / git / rsync move
               *source* between hosts. After pushing code, rebuild on the target — `scripts/bootstrap-charly.sh` in that checkout — and verify `./bin/charly version` matches what
@@ -6624,7 +6624,7 @@ go-skill:
 
                   ### Schema Driven Design (SDD)
 
-                  The operationalization of the project rulebook "Schema Driven Design (SDD)" pillar (`AGENTS.md` / `CLAUDE.md`) — the mandate lives there, the how lives here: the configuration schema comes BEFORE the code, and as much code as possible is GENERATED from the schema. The full pipeline map, source → generator → artifact:
+                  The operationalization of the project rulebook "Schema Driven Design (SDD)" pillar (`AGENTS.md`) — the mandate lives there, the how lives here: the configuration schema comes BEFORE the code, and as much code as possible is GENERATED from the schema. The full pipeline map, source → generator → artifact:
 
                   | Source (authored) | Generator | Generated artifact |
                   |---|---|---|
@@ -7040,12 +7040,12 @@ go-quality-skill:
         family: internals
         owner: charly-internals
         description: |-
-            Check charly's Go source for CLAUDE.md compliance + code quality: golangci-lint v2, gopls, go vet, gofmt, the .go compliance checklist (R3/R4/R5), the legitimate-pattern allowlist. Use before a Go code-quality audit or lint sweep.
+            Check charly's Go source for AGENTS.md compliance + code quality: golangci-lint v2, gopls, go vet, gofmt, the .go compliance checklist (R3/R4/R5), the legitimate-pattern allowlist. Use before a Go code-quality audit or lint sweep.
 
         triggers:
-            - "Go code-quality / CLAUDE.md-compliance audit / `golangci-lint` / `dupl` / duplication or dead-code check / `.golangci.yml`"
+            - "Go code-quality / AGENTS.md-compliance audit / `golangci-lint` / `dupl` / duplication or dead-code check / `.golangci.yml`"
         content: |
-            # go-quality — checking & fixing charly Go source for project-rulebook compliance (`AGENTS.md` / `CLAUDE.md`)
+            # go-quality — checking & fixing charly Go source for project-rulebook compliance (`AGENTS.md`)
 
             The `charly/` CLI is one large `package main` (~570 files, ~169K LOC). This skill is the
             operational HOW for auditing it against the checkable subset of the project rulebook and driving the
@@ -7701,7 +7701,7 @@ install-plan-skill:
                   separate, check-time concern handled by `candy/plugin-check/preflight_images.go`
                   (the check-run preflight arm, K-wave 2 cone R4 — the former
                   `charly/check_image_preflight.go` is DELETED)
-                  (the project rulebook "Deploy fetches NOTHING speculative" (`AGENTS.md` / `CLAUDE.md`)).
+                  (the project rulebook "Deploy fetches NOTHING speculative" (`AGENTS.md`)).
 
                   ## The step kinds (the builtin kinds + the open `external:<word>` family)
 
@@ -8977,7 +8977,7 @@ plugin-skill:
                   ## The per-plugin CUE schema — the single source, two consumers
 
                   **Every plugin ships its OWN `.cue` schema, and it is the SINGLE SOURCE for that
-                  plugin's params.** This is the project rulebook "Schema Driven Design (SDD)" pillar (`AGENTS.md` / `CLAUDE.md`) applied per-plugin: the schema
+                  plugin's params.** This is the project rulebook "Schema Driven Design (SDD)" pillar (`AGENTS.md`) applied per-plugin: the schema
                   comes BEFORE the plugin's code, and both consumers below are derived from that one source (the
                   cross-generator pipeline map + the generation-coverage current state live in `/charly-internals:go`
                   "Schema Driven Design (SDD)"). There is NO input-less exemption: a plugin whose capability declares no
@@ -9126,11 +9126,9 @@ skills-skill:
 
             ## Skill Dispatchers
 
-            The repository has two complete root dispatchers: `CLAUDE.md` is the
-            harness-specific adapter and `AGENTS.md` is the harness-neutral rulebook for
-            compatible readers. Keep their trigger → skill mappings and overall policy
-            equivalent while confining harness-specific mechanics to the adapter and
-            skills. When multiple triggers apply, load all matching skills before acting.
+            `AGENTS.md` is the single, complete, harness-neutral rulebook: every
+            harness reads it directly, and the trigger → skill dispatcher lives there.
+            When multiple triggers apply, load all matching skills before acting.
             Full index: `marketplace/README.md`.
 
             ## The corpus must actually LOAD — audit delivery, not just content
@@ -9199,7 +9197,7 @@ skills-skill:
             |---------|--------|
             | Deployment step fails or needs undocumented workaround | Update the relevant `/charly-core:*`, `/charly-build:*`, `/charly-check:*`, `/charly-automation:*`, kind plugin (`/charly-image:*`, `/charly-vm:*`, `/charly-kubernetes:*`, `/charly-local:*`, `/charly-pod:*`), per-pod plugin (`/charly-jupyter:*`, `/charly-coder:*`, …), or split-foundation plugin (`/charly-distros:*`, `/charly-languages:*`, `/charly-infrastructure:*`, `/charly-tools:*`) |
             | Verification check missing from image skill | Add to the image skill's Verification section |
-            | Skill's recommended defaults are wrong | Fix in the skill, not the project rulebook (`AGENTS.md` / `CLAUDE.md`) |
+            | Skill's recommended defaults are wrong | Fix in the skill, not the project rulebook (`AGENTS.md`) |
             | New feature added to charly CLI | Update `/charly-core:<cmd>` or `/charly-build:<cmd>` skill + `/charly-internals:go` source map |
             | New candy or box added | Create skill via `charly box new candy` scaffold or manual SKILL.md |
             | Bug fix changes behavior | Document the fix in affected skills |
@@ -9255,7 +9253,7 @@ skills-skill:
                -l 'DO[- ]NOT[- ]EDIT'` tells you which files are generated — but triage the hits
                rather than trusting them, since a file may MENTION the banner without carrying one
                (agent definitions under `marketplace/<family>/agents/` are hand-authored).
-            2. If the insight affects cross-skill behavior, update the project rulebook (`AGENTS.md` / `CLAUDE.md`) too
+            2. If the insight affects cross-skill behavior, update the project rulebook (`AGENTS.md`) too
             3. After any non-trivial deployment session, ask: "Did we learn anything that future sessions should know?"
 
             ### Regenerate ONLY the projections of the sources you edited
@@ -9359,7 +9357,7 @@ skills-skill:
 
             | Content type | Where it belongs |
             |-------------|-----------------|
-            | Project philosophy, architecture, key rules | harness root rulebook (`CLAUDE.md` or `AGENTS.md`) |
+            | Project philosophy, architecture, key rules | harness root rulebook (`AGENTS.md`) |
             | Command usage, flags, examples | `/charly-core:<cmd>` or `/charly-build:<cmd>` skill |
             | Layer properties, packages, ports | per-pod plugin (`/charly-jupyter:<name>`, `/charly-coder:<name>`, …) or split-foundation plugin (`/charly-distros:*`, `/charly-languages:*`, `/charly-infrastructure:*`, `/charly-tools:*`) for base layers |
             | Image composition, deployment, verification | per-pod plugin or `/charly-distros:<name>` / `/charly-infrastructure:<name>` for base images |
@@ -9395,7 +9393,7 @@ skills-skill:
             | Landing mechanics (branch loop, the two-step PR + `pr-validator` merge/tag, CalVer-generated-at-merge, branch protection, multi-repo order) | `/charly-internals:git-workflow` |
             | Agent/workflow/team primitives, hooks doctrine | `/charly-internals:agents` |
             | Kernel/plugin doctrine (core = kernel; every capability a plugin candy), the two authoring shapes, placement, the three-lane transport doctrine, the seams catalog, **the kernel/plugin boundary law** (E/M/B/D/R) + the incomplete-seam mandate | `/charly-internals:plugin` |
-            | Skill Dispatcher, RDD/ADE/SDD mandates, acceptance checklist, attribution tiers, Documentation-only change class anchor, Key Rules index | harness root rulebooks (`CLAUDE.md` and `AGENTS.md`) |
+            | Skill Dispatcher, RDD/ADE/SDD mandates, acceptance checklist, attribution tiers, Documentation-only change class anchor, Key Rules index | harness root rulebook (`AGENTS.md`) |
 
             A registry owner may hold its canonical text in a `references/<file>.md` split file rather than the top-level `SKILL.md` body (see "Progressive disclosure" above) — the row still names the SKILL as sole owner regardless of which file inside it carries the detail.
 
@@ -9410,7 +9408,7 @@ skills-skill:
             - the 2 hooks in `.claude/hooks/` (`pre-commit-gate.sh`, `pre-push-gate.sh` — deterministic
               command-mechanics gates only; there is no reminder-hook layer),
             - the agents in `marketplace/internals/agents/*.md`,
-            - the 9 per-directory signpost `CLAUDE.md` files (`charly/`, `candy/`,
+            - the 9 per-directory signpost `AGENTS.md` files (`charly/`, `candy/`,
               `marketplace/`, `docs/`, each `box/<distro>`),
             - the workflows in `.claude/workflows/*.js`,
             - every SKILL.md that quotes a section name (grep before assuming).
@@ -9461,19 +9459,17 @@ skills-skill:
             proof). Full story: `/charly-internals:agents`. Dynamic workflows are NOT plugin
             content — they live in the superproject's `.claude/workflows/*.js`.
 
-            ### Per-directory CLAUDE.md signposts (hybrid)
+            ### Per-directory AGENTS.md signposts
 
-            The repo-root `CLAUDE.md` is the complete R0–R10 harness adapter.
-            Per-directory `CLAUDE.md` files (`charly/`, `candy/`, `marketplace/`, `docs/`, and each
+            The repo-root `AGENTS.md` is the single, complete, harness-neutral rulebook.
+            Per-directory `AGENTS.md` files (`charly/`, `candy/`, `marketplace/`, `docs/`, and each
             `box/<distro>` submodule) are THIN signposts only: they name the skills to
             load for that area and point back to root. They MUST NOT restate any rule body —
             duplication drifts (an earlier layer-validator and the reminder hooks both drifted
             exactly this way; the reminder hooks now name rules as pointers/triggers, never
-            restating their bodies). Subagents and teammates load the full `CLAUDE.md`
+            restating their bodies). Subagents and teammates load the full `AGENTS.md`
             hierarchy from their working directory, so a signpost reaches a worker scoped
-            to that subtree without bloating root. Compatible harnesses that read
-            `AGENTS.md` use its independent, harness-neutral dispatcher and do not depend
-            on these signposts.
+            to that subtree without bloating root.
 
             ## Two-Layer Sync Architecture
 
@@ -9482,7 +9478,7 @@ skills-skill:
 
             | What | Synced by | Visibility |
             |------|-----------|------------|
-            | Code, `AGENTS.md` / `CLAUDE.md`, skills, layers, images | Git | Public (committed) |
+            | Code, `AGENTS.md`, skills, layers, images | Git | Public (committed) |
             | `.claude/memory/` (auto-memory) | Syncthing | Private (gitignored) |
             | `.claude/settings.local.json` (personal overrides) | Syncthing | Private (gitignored) |
             | `.claude/settings.json` (project policy) | Git | Public (committed) |
@@ -9493,7 +9489,7 @@ skills-skill:
             without polluting the public repo.
 
             Rule of thumb: **if it's useful to every contributor, it lives in git**
-            (skills, `AGENTS.md` / `CLAUDE.md`, code). **If it's useful only to you, it lives in the
+            (skills, `AGENTS.md`, code). **If it's useful only to you, it lives in the
             Syncthing-synced half** (memory, personal settings).
 
             **A generalizable PROVEN insight saved only to memory is a knowledge LEAK — every
