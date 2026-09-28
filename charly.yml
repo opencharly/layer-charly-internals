@@ -4446,6 +4446,39 @@ git-workflow-skill:
                   the waiting issue the moment it lands. No "a sibling session" /
                   "deferred" framing.
 
+                  **Subagent accountability + identification.** A session is FULLY RESPONSIBLE
+                  for its subagents: it owns each dispatched subagent's guidance, results, and
+                  EVERY action the subagent takes (pushes, PRs, comments, takeovers, sign-offs);
+                  responsibility does NOT delegate away with the task — the parent cannot disclaim
+                  a subagent's error. An action taken by a subagent MUST identify itself and name
+                  its parent, so the chain of responsibility is followable — the footer extends to
+                  `*Agent: `<slug>` (subagent of `<parent-slug>`) · session `<ses_…>`*` + the
+                  `Assisted-by:` trailer (`Agent:` FIRST, `Assisted-by:` LAST). `CLAIM` /
+                  `TAKING OVER` / `HANDING OVER` / `BLOCKS` are addressed to the accountable PARENT,
+                  not merely a subagent. A `CLAIM` carries a PRODUCE-OR-HAND-OVER duty: produce an
+                  artifact or `HANDING OVER` with the reason — "still investigating" past the
+                  window is a silent block, not progress.
+
+                  **The parent's MONITORING DUTY.** Responsibility implies a duty to monitor: a
+                  session MUST NOT dispatch-and-forget. The parent MUST actively watch each
+                  subagent's artifacts and INTERVENE when the subagent STALLS (no artifact
+                  progress — no push, PR, or completed `charly/pr-validator` run — within the
+                  window; the SILENCE/STALL ALARM) or receives ONE BLOCK after another (not
+                  converging toward the 5/5 auto-close) — re-brief it with the exact findings, take
+                  over the fix, or take over the PR under the comment-first hand-off rule, BEFORE
+                  the auto-close. Liveness ≠ progress: judge progress by ARTIFACTS (a pushed
+                  branch, a new commit, an opened PR, a merged tag), never a session heartbeat or
+                  "still investigating". BEFORE dispatch: complete, correct guidance (the owning
+                  skills, the binding rules, the EXACT deliverable) and a defined completion
+                  (merged, with the tag). AFTER dispatch: independently VERIFY the artifacts (PR
+                  state, merge, tag, gate output) — never trust the subagent's own report. AT
+                  session end: no orphaned scopes — complete them, explicitly `HANDING OVER`, or
+                  report blocked. Monitor the PRs blocking your own work too: fire on `merged`
+                  (unblocked), `closed` (find its successor per the carry-forward rule), and
+                  `stall` (takeover candidate under the comment-first 60-min rule). Monitoring a
+                  subagent is how the parent discharges its accountability; a parent that does not
+                  watch its subagents is NOT compliant.
+
                   **A sign-off is never impersonation.** An agent NEVER impersonates the
                   operator: no comment, sign-off, or approval may claim to BE them. A sign-off
                   is valid ONLY when the posting account is in the maintainer set (the
