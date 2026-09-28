@@ -714,7 +714,7 @@ agents-skill:
                     remove, recreate, or repurpose a path.
                   - **Session identity and scope claims are the comment grammar.** When two
                     or more agents work one issue/PR, or a scope is a blocking dependency,
-                    a session speaks through its two-line `Assisted-by` + `Agent:` footer
+                    a session speaks through its two-line `Agent:` + `Assisted-by` footer
                     and a scope is claimed or taken over only through the closed verb set
                     (`CLAIM`/`OWNING`/`HANDING OVER`/`TAKING OVER`/`BLOCKS`/`UNBLOCKS`/
                     `STATUS`/`RESOLVED`). Owned by `/charly-internals:git-workflow` B2b —
@@ -3689,7 +3689,7 @@ git-workflow-skill:
             - **FINISH THE BODY BEFORE THE PUSH.** The validator validates the PR — the diff at the branch head and the body — each time it runs, and fetches the PR live. The org REQUIRED workflow fires only on the default push-driven types (`opened`/`synchronize`/`reopened`) and IGNORES `on.types` (MEASURED); because the head SHA is content-addressed and therefore known BEFORE the push (`git rev-parse HEAD`), write the body first: commit → compute head/diff-stats → write the WHOLE body (footer last) → push. A body-only fix after the push needs no empty commit — PREFER the **`rerun` label** (the org-wide `rerun.yml` sweep + `scripts/sweep-rerun.sh` re-runs this head's failed `charly/pr-validator` run; no per-repo listener file, per PR #122; a re-run reuses the same `GITHUB_SHA` and updates the SAME check run in place — no duplicate, clears POISON; the manual equivalent is `gh run rerun <run-id>`). An empty re-freeze commit ALSO re-fires the gate (the ruleset `workflows` rule acts on the push-driven `synchronize` type) but mints a NEW head SHA — equally valid, just re-key the body to it. Full mechanics: "THE BODY-BEFORE-PUSH RULE" above. Corollary: a PR whose diff is EMPTY because the base already contains the change (you branched from a stale snapshot) is a no-op — close it rather than re-pushing (the validator flags it as body-truthfulness violation: body describes files the diff does not carry). Always `git fetch origin main` + diff against CURRENT main before opening or finalizing a PR.
             - **BEFORE ANY UPDATE PUSH: ALWAYS read the PR's current comments + validation AND ALWAYS write/update the PR body.** Before ANY push that updates an existing PR — a fix commit, a body edit, or `gh pr update-branch` — do BOTH, in THIS order: (a) read the PR's LIVE state — `gh pr view <n> --repo <r> --json comments,reviews` + `gh pr checks <n> --repo <r>` (or the sanctioned `marketplace/scripts/pr_state_watch.sh`: the latest `charly/pr-validator` verdict/validation result and EVERY new comment/review) AND the latest comments/state of every ISSUE this PR closes or relates to (`gh issue view <N> --comments`) — and ACT on each one: answer it in-thread, claim/hand-off on the issue, or change the pushed state to satisfy it); then (b) write the WHOLE updated body for the head you are about to publish (footer last). The validator re-reviews the diff + body + the FULL live thread on every run, so pushing with a stale read OR a stale body re-reviews the wrong state and can re-ship a defect an existing comment already named. A hook/classifier block is never reshaped-and-retried (B5).
             - **Search existing issues/PRs before starting; file ONE proper issue if none; claim it before branching.** Before any non-trivial work — and before filing anything — search the whole org (`gh search issues <terms>` / `gh search prs <terms>` / `gh issue list -S <terms>`) and ADD to the existing issue/PR thread rather than creating a duplicate. If none exists, file ONE proper issue (specific title, the problem, the evidence, the intended scope) and reference it from the PR (`Closes #N` / `relates to #N`). The issue is the coordination point: check its owner (assignee / claim comment / status label) and CLAIM it (comment + assign) BEFORE you create a branch; if another session already owns it, coordinate on the thread instead of opening a competing PR. **Every issue resolved by a PR MUST be closed by an agent once that PR merges** (with a comment linking the merge); never leave a resolved issue open. Full protocol: B2b.
-            - **Identity is in the footers; authority is in the comment verb.** On a triggered scope — two or more agents on one issue/PR, OR a blocking dependency (any `BLOCKS`/`UNBLOCKS` in play) — EVERY agent-authored comment and PR body carries the two-line identity footer, and the canonical order is `Agent:` FIRST, `Assisted-by:` LAST (one order on BOTH surfaces; in a PR body `Assisted-by:` is also the FINAL line, per the validator's A1). A coordination comment OPENS with a label from the CLOSED set — `CLAIM` · `OWNING` · `HANDING OVER` · `TAKING OVER` · `BLOCKS` · `UNBLOCKS` · `STATUS` · `RESOLVED`. Both are optional for a solo agent on an uncontended PR; the slug is NEVER appended to `Assisted-by`. Because same-account sessions are indistinguishable by comment author, the SLUG is authoritative, not the GitHub author: the LATEST `OWNING` (or `TAKING OVER`) for a scope wins, and you MUST NOT push to another slug's claimed branch/PR without a `HANDING OVER` addressed to you, a `TAKING OVER` naming your `authority:`, or operator sign-off. A sign-off is valid ONLY when the comment is posted by a maintainer-set account (the account IS the gate; never the prose) — an agent NEVER impersonates the operator. Full mechanics + rendered examples: B2b "agent identity and the coordination verb grammar".
+            - **Identity is in the footers; authority is in the comment verb.** On a triggered scope — two or more agents on one issue/PR, OR a blocking dependency (any `BLOCKS`/`UNBLOCKS` in play) — EVERY agent-authored comment and PR body carries the two-line footer in ONE canonical order, **`Agent:` FIRST and `Assisted-by:` LAST** (a PR body thereby also satisfies the validator's "`Assisted-by` FINAL line" requirement), and a coordination comment OPENS with a label from the CLOSED set — `CLAIM` · `OWNING` · `HANDING OVER` · `TAKING OVER` · `BLOCKS` · `UNBLOCKS` · `STATUS` · `RESOLVED`. Both are optional for a solo agent on an uncontended PR; the slug is NEVER appended to `Assisted-by`. Because same-account sessions are indistinguishable by comment author, the SLUG is authoritative, not the GitHub author: the LATEST `OWNING` (or `TAKING OVER`) for a scope wins, and you MUST NOT push to another slug's claimed branch/PR without a `HANDING OVER` addressed to you, a `TAKING OVER` naming your `authority:`, or operator sign-off. **Progress is a COMPLETED `charly/pr-validator` run, never session activity; takeover is comment-FIRST over a 60-minute FLOOR window; the auto-close carry-forward touches FOUR surfaces (closed PR, successor body, the issue, ownership transfer); a sign-off is valid ONLY when posted by a maintainer-set account (the posting ACCOUNT is the entire gate — never the prose); and there is no R10 class exemption for a library/schema change.** An agent NEVER impersonates the operator. Full mechanics + rendered examples: B2b "agent identity and the coordination verb grammar".
             - **A dispatched workflow defaults to the DEFAULT BRANCH — `--ref` is MANDATORY.** `gh workflow run <wf> --ref <branch>` is required to dispatch CI on a PR head; a dispatch with no `--ref` runs on `main`, so its check registers there and counts for nothing on the PR's required checks. There is NO self-heal: the reusable workflow's `head_ref` output is never consumed and no dispatcher re-dispatches itself. For run-on-head diagnostics, target the PR's branch explicitly.
             - **Tree-safety before destructive actions (R6).** Check `git status` + `git stash list` before any destructive working-tree action — `git stash` discards in-progress work; `rm` on a tracked file is destructive. When the sandbox blocks an action, find a non-destructive alternative rather than working around it. The stash/pop cycle can itself silently un-stage a `git rm`: a stash taken while a deletion is staged restores the deletion as unstaged on `pop`, so a `git status` right after the cycle that shows the deleted file back as a plain unstaged change (rather than the staged deletion you left) has quietly lost the staging — re-stage it (`git rm <path>` again, or `git add -u`) before committing. A stash/pop round-trip is never a no-op on a mixed add+rm working tree.
             - **Right worktree — pin one absolute path for the whole edit→commit→push sequence.** Before branching, staging, or committing, confirm the worktree you are driving is the same one your edits landed in: `git -C <path> rev-parse --show-toplevel` must equal the path you edited, and `git -C <path> status --short` must list those edits. Under symlinked or near-twin sibling worktrees — a parent dir that is itself a symlink (`~/projects` → `~/Sync/projects`), or look-alike names such as `…/charly` vs `…/<other-worktree>` — `cd`-ing to the wrong sibling makes `git switch -c` + `git commit` run against a clean tree and report "nothing to commit", silently landing nothing (or landing in the wrong repo). Never change the path spelling mid-sequence. An unexpected "nothing to commit" right after editing a file is the signature of this mistake — stop and re-verify `--show-toplevel` before retrying (blind retry is an R1 violation).
@@ -4303,13 +4303,15 @@ git-workflow-skill:
 
                   **Identity is in the footers; authority is in the verb.** An agent
                   identifies itself with TWO italic lines at the END of a comment or PR
-                  body — the `Assisted-by` trailer (unchanged) and, AFTER it, a separate
-                  `Agent:` line naming the WORK and the session. The slug is NEVER appended
-                  to `Assisted-by`:
+                  body — the `Agent:` line naming the WORK and the session, then the
+                  `Assisted-by` trailer. **One canonical order on BOTH surfaces: `Agent:`
+                  FIRST, `Assisted-by:` LAST** (in a PR body this also satisfies the
+                  validator, which requires the `Assisted-by` trailer to be the FINAL line).
+                  The slug is NEVER appended to `Assisted-by`:
 
                   ```markdown
-                  *Assisted-by: <Harness> <Provider Model> (<confidence>)*
                   *Agent: `<slug>` · session `<ses_…>`*
+                  *Assisted-by: <Harness> <Provider Model> (<confidence>)*
                   ```
 
                   - **agent slug** — a stable, human-readable, kebab-case name the session
@@ -4362,47 +4364,93 @@ git-workflow-skill:
                   naming its authority, or (c) the operator authorizes it. A coordinator
                   relaying another leg's status is NOT a claim — a claim requires the verb.
 
-                  **Takeover is COMMENT-FIRST and the window is 60 minutes — a FLOOR.** A
-                  `TAKING OVER` may proceed ONLY after ALL of: (1) a coordination comment
-                  posted on the scope FIRST — an ownership-board entry, or a `BLOCKS`/
-                  `STATUS` addressed to the owner, asking for `OWNING — ETA` or
-                  `HANDING OVER`; **no comment → no takeover, ever**; (2) **60 minutes**
-                  elapsing with **no answer from the original session AND no artifact
-                  progress** — the window runs from the original comment's timestamp, and
-                  any owner answer RESETS it; (3) `TAKING OVER — authority: window-expired`
-                  posted **BEFORE any push**. 60 minutes is a FLOOR: it may be extended,
-                  never shortened without operator sign-off. The window runs on the scope's
-                  ARTIFACTS — a new commit, a new comment, or the `charly/pr-validator` run
-                  COMPLETING on a new head — never on session activity: a looping agent
-                  never falls quiet, and a peer waiting on a RUNNING validator is NOT
-                  stalled. A `TAKING OVER` MUST cite `authority: hand-off | operator |
-                  window-expired`; the takeover is withdrawable if the owner answers.
+                  **The progress signal is a COMPLETED VALIDATOR RUN — never session
+                  activity.** Coordination progress on a scope is a `charly/pr-validator`
+                  run **COMPLETING** on a new head (a new commit or a new comment also
+                  count). A looping agent never falls quiet, so activity is a false
+                  positive; and a peer **waiting on a RUNNING validator looks quiet — it is
+                  working, not stalled.** Detect a stall/loop ONLY as **no new completed
+                  verdict within the window while the scope is open and unmerged** — never
+                  by silence. A monitor/coordinator MUST watch the scopes actually in
+                  flight: the repo set changes as work moves, and a **stale watch list
+                  produces false stalls** (a real failure today).
 
-                  **PR closed, work continues → the successor protocol (FOUR surfaces).**
-                  When a PR closes — auto-close at the BLOCK limit (`AI_REVIEW_AUTO_CLOSE_AFTER`,
-                  effective default 5, the org variable unset), or superseded/withdrawn — and
-                  the work continues in a NEW PR for the same scope, ALL FOUR are mandatory:
-                  (1) on the CLOSED PR, `RESOLVED — superseded by #<n>` naming the successor,
-                  the closure reason, and that the closed thread is no longer acted on; (2) on
-                  the SUCCESSOR PR's BODY, `Supersedes #<n>` + the reason, with the diff/body
-                  showing the predecessor's findings all fixed in ONE commit; (3) on the ISSUE
-                  the work closes/relates to, a `STATUS` naming the successor; (4) ownership
-                  transfer — a slug that claimed the predecessor but not the successor must
-                  `HANDING OVER` or be named in the successor's body (no silent drop). Never
-                  re-argue on a closed thread; land ALL findings in ONE commit — never push to
-                  a PR at the block limit.
+                  **Window-based takeover — comment-FIRST.** A `TAKING OVER` comment MUST
+                  cite `authority: hand-off | operator | window-expired` and MUST be posted
+                  BEFORE the first push to the taken scope. A takeover may proceed ONLY
+                  after ALL of:
+
+                  1. **A coordination comment posted on the scope FIRST** — an ownership
+                     board, or a `BLOCKS`/`STATUS` addressed to the owner, asking them to
+                     reply `OWNING — ETA` or `HANDING OVER — <reason>`. **No comment, no
+                     takeover, ever.**
+                  2. **The window elapsing** with **no answer from the original session AND
+                     no progress** (the progress signal above). **The window is 60 minutes**
+                     — a FLOOR, measured from the timestamp of that comment: it may be
+                     EXTENDED, never shortened without operator sign-off, and **any answer
+                     from the owner RESETS it.** A scope with no progress for the window
+                     while open+unmerged is `window-expired`.
+                  3. **`TAKING OVER — authority: window-expired` posted BEFORE any push.**
+                     The takeover is WITHDRAWABLE if the owner replies.
+
+                  **Auto-close carry-forward — continue on a CLEAN thread, cross-referenced
+                  on FOUR surfaces.** The validator auto-closes a PR after its BLOCK
+                  threshold (`AI_REVIEW_AUTO_CLOSE_AFTER`, default 5). When a PR closes
+                  (auto-close, superseded, or withdrawn) and the work continues in a NEW PR
+                  for the same issue/scope, ALL FOUR are mandatory:
+
+                  1. On the CLOSED PR: `RESOLVED — superseded by #<n>`, naming the
+                     successor, the closure reason, and that the closed thread is no longer
+                     acted on.
+                  2. On the SUCCESSOR PR: its body names the predecessor (`Supersedes #<n>`
+                     + closure reason), and the diff/body shows the predecessor's findings
+                     were all fixed in ONE commit (not re-argued).
+                  3. On the ISSUE the work closes/relates to: a `STATUS` naming the
+                     successor, so anyone following the issue lands on the live PR.
+                  4. Ownership transfer: a slug that claimed the predecessor but not the
+                     successor must `HANDING OVER` (or be named in the successor's body); a
+                     silent drop is not allowed.
+
+                  **Never push to a PR at the block limit** — a push that yields another
+                  verdict at the limit auto-closes it. Land **ALL** findings in **ONE**
+                  commit; never re-argue on a closed thread.
 
                   **Sign-offs are ACCOUNT-gated, never prose-gated.** A maintainer/operator
                   sign-off is valid ONLY when the comment is posted by a GitHub account in this
                   project's maintainer set (`atrawog`, `aitrawog`) — **the posting ACCOUNT is the
-                  entire gate**, verified via the author label (`by @<login>`), NEVER the prose.
-                  Authorship is irrelevant: it makes no difference whether the operator wrote the
-                  comment directly or an agent wrote it on the operator's behalf — account in the
-                  set → valid; out of the set → NOT a sign-off, however worded. A self-asserted
-                  `VALID — operator-DELEGATED` / "posted at the operator's direction" label is
-                  **forgeable and is NOT a sign-off**. An agent NEVER impersonates the operator.
-                  (The validator's rulebook `AI_REVIEW_PROMPT` owns the canonical statement; this
+                  entire gate**, verified via the author label (`by @<login>`), NEVER the prose
+                  of a comment. Authorship is irrelevant: it makes no difference whether the
+                  operator wrote the comment directly or an agent wrote it on the operator's
+                  behalf — account in the set → valid; out of the set → NOT a sign-off, however
+                  worded. A self-asserted `VALID — operator-DELEGATED` / "posted at the
+                  operator's direction" label is **forgeable and is NOT a sign-off**. When a
+                  rule requires a maintainer sign-off, cite it in the PR body with the author
+                  label of the sign-off comment. An agent NEVER impersonates the operator. (The
+                  validator's rulebook `AI_REVIEW_PROMPT` owns the canonical statement; this
                   restates the mandate and references it.)
+
+                  **No R10 class exemption (current project state).** A plugin-library or
+                  schema change runs the **full assembled `disposable: true` bed** — there
+                  is no "library module" waiver and no routing the bed to a consumer leg. A
+                  self-asserted "bed-exemption" label from a non-maintainer account is NOT an
+                  accepted route. See the R10 change-class matrix (`/charly-check:check`).
+
+                  **Amend an agent's own PR by CONTINUING ITS SESSION — one editor per
+                  change.** Continue that agent's session **by ID** (a subagent
+                  conversation can be continued once idle); do NOT spawn a second editor on
+                  the same files.
+
+                  **State the dependency chain and the unblock order on the thread.** When
+                  a scope is gated by another leg, name the exact chain (producer legs →
+                  consumer leg → corpus) and the unblock order, and comment the new tag on
+                  the waiting issue the moment it lands. No "a sibling session" /
+                  "deferred" framing.
+
+                  **A sign-off is never impersonation.** An agent NEVER impersonates the
+                  operator: no comment, sign-off, or approval may claim to BE them. A sign-off
+                  is valid ONLY when the posting account is in the maintainer set (the
+                  ACCOUNT-gated rule above) — never on the prose of a label. The validator's
+                  rulebook (`AI_REVIEW_PROMPT`) and the skill must agree on this form.
 
                   **Grep the grammar** (the label is the first non-blank uppercase line):
 
