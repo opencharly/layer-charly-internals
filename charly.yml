@@ -3147,7 +3147,7 @@ generate-source-skill:
                   | npm builder stage | `/var/cache/charly/npm-cache` | `uid=<UID>,gid=<GID>` |
                   | cargo inline | `/tmp/cargo-cache` | `uid=<UID>,gid=<GID>` |
 
-                  UID/GID in cache mounts are dynamic (from resolved image config). All non-root cache mounts use flat `/tmp/<tool>-cache` paths to avoid buildah permission issues with nested paths.
+                  UID/GID in cache mounts are dynamic (from resolved image config). Ownership is what avoids the buildah permission problem: a non-root cache mount is uid/gid-OWNED (`OwnedCacheMount`, a per-uid id namespace) rather than shared root-owned. The vocabulary stage caches (`EmitCmd`/builder stages — pixi/rattler/aur/cargo) keep their flat `/tmp/<tool>-cache` roots, while the two emitter-level caches moved to the nested `/var/cache/charly/{downloads,npm-cache}` (sdk#279) — both owned for a non-root stage (`buildkit.OwnedCacheMount`), a shared/locked mount only for a root stage. `deploykit/tasks_emit.go`: `buildCacheRoot = "/var/cache/charly"` + `downloadsCacheDir`/`npmCacheDir` under it.
 
                   ### Download caching + the generic `cache:` modifier (`EmitDownload` / `TaskCacheMounts`)
 
