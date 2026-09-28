@@ -1,7 +1,5 @@
-version: 2026.261.1747
 charly-internals:
     candy:
-        version: 2026.218.1200
         description: |-
             Concept candy owning the charly-internals contributor skills (go/plugin/agents/skills/cutover/…). Owns its family's `skill:` kind entities (sibling nodes in this file) — the
             the plugins→candies migration; candy/plugin-marketplace regenerates the marketplace
@@ -28,6 +26,7 @@ agents-skill:
             - "Verify a cutover by running the R10 beds (drive `charly check run <bed>`)"
             - "Evaluate/audit a deployment config (image or deploy, yours)"
             - "Sub-agents / dynamic workflows / agent teams / agent-lifecycle or commit-push gate hooks"
+            - "Todo ledger / interruption safety / never drop in-flight work across a new instruction"
         content: |
             # Agents, Workflows & Teams
 
@@ -54,7 +53,7 @@ agents-skill:
             | The default multi-agent execution model: orchestrator/teammate model-tier split, maximum parallelization, the slot budget, concurrent landing, the orchestrator's bidirectional verification duty, architectural-integrity ownership, the responsibility matrix and tie-breakers | `references/orchestration-model.md` |
             | Program-wide alignment: the north-star protocol, the IOU register, per-merge measurement, migration-ledger discipline, crossed-ruling reconciliation, brief verification and stop-and-respawn, whack-a-mole escalation | `references/program-discipline.md` |
             | Bed-scoped parallel real-deployment testing: the concurrency ceilings (store lock, exclusive-resource tokens, long-bed ownership, in-tree build artifacts, per-worktree binaries) and their fixes; the charly binary in a multi-worktree setup; the binding rule for running a bed; implementation-workflow shape; speed levers | `references/parallel-bed-testing.md` |
-            | Delegation as fresh context; teammate context lifecycle; the nine sub-agent operational invariants; the hooks doctrine (current hook inventory); agent lifecycle hygiene; the universal PR-gate audit; worktree/validator lifecycle | `references/hooks-and-lifecycle.md` |
+            | Delegation as fresh context; teammate context lifecycle; the nine sub-agent operational invariants; the hooks doctrine (current hook inventory); agent lifecycle hygiene; the todo ledger & interruption safety; the universal PR-gate audit; worktree/validator lifecycle | `references/hooks-and-lifecycle.md` |
 
             ## Cross-References
 
@@ -101,6 +100,12 @@ agents-skill:
             into a first-try PASS (umbrella #286). Full checklist:
             the `/charly-internals:git-workflow` skill's pre-validator self-audit reference.
 
+            **And a brief must never bake in a VOLATILE org fact** — a CI workflow file name,
+            a pin/tag/branch, or a moving issue/PR number. The brief names the DISCOVERY
+            command; the worker discovers the value at run time. Full rule and the measured
+            `.github#141` evidence: `references/program-discipline.md` ("Volatile facts are
+            DISCOVERED, never baked into a brief").
+
             ## The harness-adapter CONFIG mechanism (layer-charly-internals#49)
 
             Harness adaptation lives in the **per-harness config at the repo root**, never in
@@ -110,6 +115,31 @@ agents-skill:
             surface is identical-by-design, umbrella-only, or deliberately-forked - so a shared
             file is never copied into a fork and a fork is never silently re-synced. This skill
             documents the mechanism; the rulebooks stay harness-neutral.
+
+            ## Todo ledger & interruption safety
+
+            Durable in-flight state lives in the session's **structured todo ledger** — the
+            harness's todo primitive. It is the ONE session-scoped record of what is in
+            flight, and it preserves work across an interruption only when it is treated
+            as durable. Full procedure and the harness-binding detail:
+            `references/hooks-and-lifecycle.md` ("Todo ledger & interruption safety").
+
+            - **The ledger IS the todo primitive.** Maintain it as the durable,
+              session-scoped ledger of in-flight work, not a scratch list rewritten each
+              turn.
+            - **Reconcile FIRST, then act.** On ANY interrupting input — a fresh user
+              message, an automated watcher alert, a delegated/subagent report, or a
+              compaction — FIRST reconcile the ledger (keep every in-flight item; ADD the
+              new one; never drop), THEN act. An interruption is an **ADDITION, not a
+              reset**; never start a new list from scratch.
+            - **Long operations are ledger-first.** Before starting any long-running
+              operation, ensure the ledger reflects it, so a later interruption resumes
+              from STATE, not memory.
+
+            The umbrella rulebook states this as rule 11 (`AGENTS.md`, "Todo ledger &
+            interruption safety") and points here for the detail. Where this guidance
+            itself belongs is owned by the sibling `/charly-internals:skills` ("Where
+            guidance belongs"): mandate in `AGENTS.md`, detail in the skill.
         references:
             - name: agent-roster
               content: |
@@ -1803,6 +1833,38 @@ agents-skill:
                   alias-attribution instance converged only once a root-cause
                   de-fragilization (state the stable spec-source, never an exact per-symbol
                   location) replaced the per-instance patching.
+
+                  ## Volatile facts are DISCOVERED, never baked into a brief
+
+                  **Rule.** A spawn brief may pin the INVARIANT — the owning skill, the
+                  deliverable, the change class, the preflight — but MUST NOT hardcode a
+                  VOLATILE org fact: a CI workflow file NAME or path, a `vars.*` value or
+                  charly pin, a tag, a branch name, an issue/PR number that may move, or the
+                  exact command a repo's CI runs. The worker DISCOVERS those at run time from
+                  upstream (`git fetch`; `gh api repos/<o>/<r>/contents/.github/workflows`;
+                  `git ls-remote`; `gh variable get` / the org pin) and the brief NAMES the
+                  discovery command instead of the value.
+
+                  **Why (measured).** Org cutover `opencharly/.github#141`
+                  (2026-09-27T14:08Z) DELETED the per-repo `deploy.yml` gate from ~376 repos
+                  mid-campaign, replacing it with the org reusable `candy-validate.yml`. Every
+                  brief that said "paste the repo's `deploy.yml` gate" then instructed a
+                  falsity: the worker either pastes a nonexistent gate (B10/R1
+                  body-truthfulness BLOCK) or, correctly, stops (wasted dispatch). Hardcoded
+                  `deploy.yml`/pin facts also made waves 1–3's already-merged docs reference a
+                  deleted file — now R1 issue `opencharly/opencharly#293`.
+
+                  **Brief-verification extension.** Before EVERY dispatch, re-verify the
+                  brief's load-bearing premise against upstream — if a fact it depends on can
+                  have changed since the brief was written, replace it with the discovery
+                  command. A brief whose premise is contradicted mid-run MUST instruct the
+                  worker to STOP and report (the correct behavior), never to improvise or push
+                  a falsity.
+
+                  **Parent responsibility.** The parent owns every subagent action; a brief
+                  that hardcodes a volatile fact makes the worker's BLOCK the PARENT's defect,
+                  not the worker's. Do not dispatch a wave until the brief's volatile facts are
+                  expressed as discovery steps.
 
                   ## See also
 
@@ -6346,7 +6408,13 @@ git-workflow-skill:
                   5. NEVER surface a failure you cannot own. Either fix it (including the coupled
                      pin/migrate, not just the manifest) or omit it and paste only the repo's
                      authoritative gate. If it is genuinely separate, name the EXACT owning
-                     batch/task id — "pre-existing/unrelated" with no exit is a BLOCK.
+                     batch/task id — "pre-existing/unrelated" with no exit is a BLOCK. The
+                     repo's authoritative gate must be **DISCOVERED** (its CURRENT workflow file
+                     under `.github/workflows/`, read from upstream — `gh api
+                     repos/<o>/<r>/contents/.github/workflows` / `git ls-remote`), never
+                     assumed from a brief or a memorized file name: `opencharly/.github#141`
+                     deleted the per-repo `deploy.yml` gate from ~376 repos, so a brief-baked
+                     gate name is a falsity the body would carry (B10/R1).
                   6. One cutover = remove AND place in the SAME change. If the replacement home
                      does not exist yet, land the home first, or name a DISTINCT immediate-next
                      batch cutover with a stated non-blocking rationale (the pointer must not be
@@ -9539,6 +9607,45 @@ skills-skill:
             | Operationalization / matrix / catalog / worked example (the HOW) | The ONE owning skill (see the Authoritative-copy registry below) |
             | Version history / past changes / renames / cutover narration | the repo's `CHANGELOG/` (per-CalVer `<YYYY.DDD.HHMM>.md`) — never the project rulebook or a skill |
             | Long-term thesis / vision / aspiration ("why & where it's going") | `VISION.md` (repo root) — never restating command usage, architecture, or history |
+
+            ## Where guidance belongs
+
+            Every new fact belongs on exactly ONE surface, and every surface has a reader.
+            Choosing the surface wrong either duplicates the fact (two copies drift
+            apart) or hides it where its reader never looks:
+
+            | Surface | Carries | Put a new fact there when |
+            |---|---|---|
+            | `README.md` | the user-facing overview — what the repo is, how to use it | the reader has never opened the source: what the component does, how to install/run/use it |
+            | `AGENTS.md` | the harness-neutral RULEBOOK — short, decisive policy (the WHAT and the MUST) | the fact is a hard rule, gate, or mandate every session must obey, or a pointer (trigger → owning skill) |
+            | the owning skill | the detailed HOW — procedure, matrices, catalogs, worked examples, command sequences | the fact is operationalization detail one rule needs, or how-to that would bloat the rulebook |
+            | `CHANGELOG/` | history — dated change notes, renames, completed cutovers, retired identifiers | the content is about the PAST (what changed, why, when). Never advice; nobody reads history for guidance |
+
+            "Mandate in the harness rulebook, detail in the skill" (below) is this same
+            split seen from the rule side: the rulebook states the mandate plus a pointer;
+            the owning skill carries the detail. README and `CHANGELOG/` are the other two
+            poles — the user overview and the history.
+
+            **Anti-patterns — each is a placement mistake, not a wording one:**
+
+            - **Policy prose drifting into a skill.** A MUST / gate / mandate written only
+              as skill prose: a session that loads the rulebook alone never sees it. The
+              rulebook states the mandate; the skill carries the how.
+            - **How-to bloating `AGENTS.md`.** Matrices, catalogs, worked examples, and
+              command sequences are detail — move them to the owning skill and leave the
+              rulebook the mandate plus a pointer; the rulebook stays short.
+            - **History kept in a rulebook.** Dated notes, rename narratives, and cutover
+              stories go to `CHANGELOG/<YYYY.DDD.HHMM>.md`; the rulebook and the skill state
+              only the standing rule, present tense, forward-looking.
+            - **Harness / file names leaking into harness-neutral policy prose.** `AGENTS.md`
+              is harness-neutral: name the ROLE (the agent, the watcher, the gate), never the
+              harness or a harness-specific file. Harness mechanics live in the per-harness
+              config or skill.
+
+            The umbrella rulebook's rule 11 ("Todo ledger & interruption safety") is a
+            worked example of the split: the rulebook states the MUST and names the owning
+            skill, and the sibling `/charly-internals:agents` owns the ledger procedure
+            (see `/charly-internals:agents`, "Todo ledger & interruption safety").
 
             ## Mandate in the harness rulebook, detail in the skill
 
