@@ -102,6 +102,12 @@ agents-skill:
             into a first-try PASS (umbrella #286). Full checklist:
             the `/charly-internals:git-workflow` skill's pre-validator self-audit reference.
 
+            **And a brief must never bake in a VOLATILE org fact** — a CI workflow file name,
+            a pin/tag/branch, or a moving issue/PR number. The brief names the DISCOVERY
+            command; the worker discovers the value at run time. Full rule and the measured
+            `.github#141` evidence: `references/program-discipline.md` ("Volatile facts are
+            DISCOVERED, never baked into a brief").
+
             ## The harness-adapter CONFIG mechanism (layer-charly-internals#49)
 
             Harness adaptation lives in the **per-harness config at the repo root**, never in
@@ -1829,6 +1835,38 @@ agents-skill:
                   alias-attribution instance converged only once a root-cause
                   de-fragilization (state the stable spec-source, never an exact per-symbol
                   location) replaced the per-instance patching.
+
+                  ## Volatile facts are DISCOVERED, never baked into a brief
+
+                  **Rule.** A spawn brief may pin the INVARIANT — the owning skill, the
+                  deliverable, the change class, the preflight — but MUST NOT hardcode a
+                  VOLATILE org fact: a CI workflow file NAME or path, a `vars.*` value or
+                  charly pin, a tag, a branch name, an issue/PR number that may move, or the
+                  exact command a repo's CI runs. The worker DISCOVERS those at run time from
+                  upstream (`git fetch`; `gh api repos/<o>/<r>/contents/.github/workflows`;
+                  `git ls-remote`; `gh variable get` / the org pin) and the brief NAMES the
+                  discovery command instead of the value.
+
+                  **Why (measured).** Org cutover `opencharly/.github#141`
+                  (2026-09-27T14:08Z) DELETED the per-repo `deploy.yml` gate from ~376 repos
+                  mid-campaign, replacing it with the org reusable `candy-validate.yml`. Every
+                  brief that said "paste the repo's `deploy.yml` gate" then instructed a
+                  falsity: the worker either pastes a nonexistent gate (B10/R1
+                  body-truthfulness BLOCK) or, correctly, stops (wasted dispatch). Hardcoded
+                  `deploy.yml`/pin facts also made waves 1–3's already-merged docs reference a
+                  deleted file — now R1 issue `opencharly/opencharly#293`.
+
+                  **Brief-verification extension.** Before EVERY dispatch, re-verify the
+                  brief's load-bearing premise against upstream — if a fact it depends on can
+                  have changed since the brief was written, replace it with the discovery
+                  command. A brief whose premise is contradicted mid-run MUST instruct the
+                  worker to STOP and report (the correct behavior), never to improvise or push
+                  a falsity.
+
+                  **Parent responsibility.** The parent owns every subagent action; a brief
+                  that hardcodes a volatile fact makes the worker's BLOCK the PARENT's defect,
+                  not the worker's. Do not dispatch a wave until the brief's volatile facts are
+                  expressed as discovery steps.
 
                   ## See also
 
@@ -6372,7 +6410,13 @@ git-workflow-skill:
                   5. NEVER surface a failure you cannot own. Either fix it (including the coupled
                      pin/migrate, not just the manifest) or omit it and paste only the repo's
                      authoritative gate. If it is genuinely separate, name the EXACT owning
-                     batch/task id — "pre-existing/unrelated" with no exit is a BLOCK.
+                     batch/task id — "pre-existing/unrelated" with no exit is a BLOCK. The
+                     repo's authoritative gate must be **DISCOVERED** (its CURRENT workflow file
+                     under `.github/workflows/`, read from upstream — `gh api
+                     repos/<o>/<r>/contents/.github/workflows` / `git ls-remote`), never
+                     assumed from a brief or a memorized file name: `opencharly/.github#141`
+                     deleted the per-repo `deploy.yml` gate from ~376 repos, so a brief-baked
+                     gate name is a falsity the body would carry (B10/R1).
                   6. One cutover = remove AND place in the SAME change. If the replacement home
                      does not exist yet, land the home first, or name a DISTINCT immediate-next
                      batch cutover with a stated non-blocking rationale (the pointer must not be
