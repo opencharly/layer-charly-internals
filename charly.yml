@@ -3139,12 +3139,12 @@ generate-source-skill:
                   | `deb.packages` | `/var/cache/apt` + `/var/lib/apt` | `sharing=locked` |
                   | `pac.packages` + `aur` | `/var/cache/pacman/pkg` | `sharing=locked` |
                   | `command:` as root | Distro-format caches (above) + `/ctx` bind to layer stage + any `cache:` (shared) | — |
-                  | `command:` as non-root | `/tmp/npm-cache` (UID-scoped) + `/ctx` bind to layer stage + any `cache:` (owned) | `uid=<UID>,gid=<GID>` |
-                  | `download:` | `/tmp/downloads` (shared) — **content-addressed**: file fetched once, reused across builds + any `cache:` | — |
+                  | `command:` as non-root | `/var/cache/charly/npm-cache` (UID-scoped) + `/ctx` bind to layer stage + any `cache:` (owned) | `uid=<UID>,gid=<GID>` |
+                  | `download:` | `/var/cache/charly/downloads` (shared) — **content-addressed**: file fetched once, reused across builds + any `cache:` | — |
                   | `task: cache:` | each declared path; ownership from the task `run_as:` (root → shared/locked, else uid/gid-owned) | per-user |
                   | AUR builder stage | `/var/cache/pacman/pkg` (shared) + `/tmp/aur-srcdest` + `/tmp/aur-xdg-cache` (owned: makepkg SRCDEST + yay clones) | mixed |
                   | pixi builder stage | `/tmp/pixi-cache` + `/tmp/rattler-cache` | `uid=<UID>,gid=<GID>` |
-                  | npm builder stage | `/tmp/npm-cache` | `uid=<UID>,gid=<GID>` |
+                  | npm builder stage | `/var/cache/charly/npm-cache` | `uid=<UID>,gid=<GID>` |
                   | cargo inline | `/tmp/cargo-cache` | `uid=<UID>,gid=<GID>` |
 
                   UID/GID in cache mounts are dynamic (from resolved image config). All non-root cache mounts use flat `/tmp/<tool>-cache` paths to avoid buildah permission issues with nested paths.
@@ -3152,7 +3152,7 @@ generate-source-skill:
                   ### Download caching + the generic `cache:` modifier (`EmitDownload` / `TaskCacheMounts`)
 
                   `EmitDownload` (`sdk/deploykit/tasks_emit.go`) writes every `download:` to a **content-addressed**
-                  file in the `/tmp/downloads` cache mount: `__c=/tmp/downloads/$(printf %s "$url"
+                  file in the `/var/cache/charly/downloads` cache mount: `__c=/var/cache/charly/downloads/$(printf %s "$url"
                   | sha256sum | cut -c1-64)`, fetched only when absent (`[ -s "$__c" ] ||`), via
                   `curl -o "$__c.part" && mv -f "$__c.part" "$__c"` (atomic rename — a
                   partial/corrupt download is never reused), then the extractor reads `"$__c"`.
@@ -3393,7 +3393,7 @@ generate-source-skill:
                          case "copy":     EmitCopy        (COPY --from=<layer> --chmod= --chown=)
                          case "write":    StageInlineContent + EmitWrite (COPY from .build _inline)
                          case "link":     EmitLinkBatch   (coalesces adjacent same-user)
-                         case "download": EmitDownload    (RUN curl + extractor + /tmp/downloads cache)
+                         case "download": EmitDownload    (RUN curl + extractor + /var/cache/charly/downloads cache)
                          case "setcap":   EmitSetcapBatch (coalesces; strip on empty caps)
                          case "command":  EmitCmd         (RUN <shell-probe> <<'OVCMD' … OVCMD + /ctx bind)
                          case "build":    WriteCandySteps (deploykit) handles builder placement
@@ -3424,7 +3424,7 @@ generate-source-skill:
                   | `EmitCopy(b, Op, layerStage, img)` | `COPY --from=<layerStage> --chmod= [--chown=] <src> <to>` |
                   | `EmitWrite(b, Op, srcPath, img)` | `COPY --chmod=<mode> [--chown=<uid>:<gid>] <srcPath> <path>` — `--chmod=` first, and **no `--from=`** (the source is a build-context path) where `srcPath` is the staged inline-content file |
                   | `EmitLinkBatch(b, []Op, img)` | One `RUN ln -sf t1 l1 && ln -sf t2 l2 …` |
-                  | `EmitDownload(b, Op, img)` | `RUN --mount=type=cache,dst=/tmp/downloads [+ task cache:] <shell-probe> '… curl -o "$__c.part" && mv → /tmp/downloads/<sha256>; <extractor> "$__c"'` — content-addressed, fetch-once, integrity-safe |
+                  | `EmitDownload(b, Op, img)` | `RUN --mount=type=cache,dst=/var/cache/charly/downloads [+ task cache:] <shell-probe> '… curl -o "$__c.part" && mv → /var/cache/charly/downloads/<sha256>; <extractor> "$__c"'` — content-addressed, fetch-once, integrity-safe |
                   | `EmitSetcapBatch(b, []Op, img)` | `RUN setcap -r … && setcap caps path …` |
                   | `EmitCmd(b, Op, layerStage, img, userIsRoot)` | `RUN --mount=type=bind,from=<layerStage>,source=/,target=/ctx [--mount=type=cache,…] sh -c 'SH=/bin/sh; [ -x /bin/bash ] && SH=/bin/bash; exec "$SH"' sh <<'OVCMD'` followed by the BUILD_ARCH/ARCH exports, `set -e`, the command, and a closing `OVCMD` (single-quoted heredoc — see below) |
 
