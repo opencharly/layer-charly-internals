@@ -4391,8 +4391,6 @@ git-workflow-skill:
                   3. **`TAKING OVER — authority: window-expired` posted BEFORE any push.**
                      The takeover is WITHDRAWABLE if the owner replies.
 
-                  A coordinator relaying status is NOT a claim — a claim requires the verb.
-
                   **Auto-close carry-forward — continue on a CLEAN thread, cross-referenced
                   on FOUR surfaces.** The validator auto-closes a PR after its BLOCK
                   threshold (`AI_REVIEW_AUTO_CLOSE_AFTER`, default 5). When a PR closes
