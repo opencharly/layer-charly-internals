@@ -4432,8 +4432,9 @@ git-workflow-skill:
                   **No R10 class exemption (current project state).** A plugin-library or
                   schema change runs the **full assembled `disposable: true` bed** — there
                   is no "library module" waiver and no routing the bed to a consumer leg. A
-                  self-asserted "bed-exemption" label from a non-maintainer account is NOT an
-                  accepted route. See the R10 change-class matrix (`/charly-check:check`).
+                  bed-exemption sign-off is NOT an accepted route, from ANY account — a hard R10
+                  rule is not sign-off-waivable. See the R10 change-class matrix
+                  (`/charly-check:check`).
 
                   **Amend an agent's own PR by CONTINUING ITS SESSION — one editor per
                   change.** Continue that agent's session **by ID** (a subagent
