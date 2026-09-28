@@ -4452,7 +4452,7 @@ git-workflow-skill:
                   responsibility does NOT delegate away with the task — the parent cannot disclaim
                   a subagent's error. An action taken by a subagent MUST identify itself and name
                   its parent, so the chain of responsibility is followable — the footer extends to
-                  `*Agent: `<slug>` (subagent of `<parent-slug>`) · session `<ses_…>`*` + the
+                  `*Agent: <slug> (subagent of <parent-slug>) · session <ses_…>*` + the
                   `Assisted-by:` trailer (`Agent:` FIRST, `Assisted-by:` LAST). `CLAIM` /
                   `TAKING OVER` / `HANDING OVER` / `BLOCKS` are addressed to the accountable PARENT,
                   not merely a subagent. A `CLAIM` carries a PRODUCE-OR-HAND-OVER duty: produce an
