@@ -28,6 +28,7 @@ agents-skill:
             - "Verify a cutover by running the R10 beds (drive `charly check run <bed>`)"
             - "Evaluate/audit a deployment config (image or deploy, yours)"
             - "Sub-agents / dynamic workflows / agent teams / agent-lifecycle or commit-push gate hooks"
+            - "Todo ledger / interruption safety / never drop in-flight work across a new instruction"
         content: |
             # Agents, Workflows & Teams
 
@@ -54,7 +55,7 @@ agents-skill:
             | The default multi-agent execution model: orchestrator/teammate model-tier split, maximum parallelization, the slot budget, concurrent landing, the orchestrator's bidirectional verification duty, architectural-integrity ownership, the responsibility matrix and tie-breakers | `references/orchestration-model.md` |
             | Program-wide alignment: the north-star protocol, the IOU register, per-merge measurement, migration-ledger discipline, crossed-ruling reconciliation, brief verification and stop-and-respawn, whack-a-mole escalation | `references/program-discipline.md` |
             | Bed-scoped parallel real-deployment testing: the concurrency ceilings (store lock, exclusive-resource tokens, long-bed ownership, in-tree build artifacts, per-worktree binaries) and their fixes; the charly binary in a multi-worktree setup; the binding rule for running a bed; implementation-workflow shape; speed levers | `references/parallel-bed-testing.md` |
-            | Delegation as fresh context; teammate context lifecycle; the nine sub-agent operational invariants; the hooks doctrine (current hook inventory); agent lifecycle hygiene; the universal PR-gate audit; worktree/validator lifecycle | `references/hooks-and-lifecycle.md` |
+            | Delegation as fresh context; teammate context lifecycle; the nine sub-agent operational invariants; the hooks doctrine (current hook inventory); agent lifecycle hygiene; the todo ledger & interruption safety; the universal PR-gate audit; worktree/validator lifecycle | `references/hooks-and-lifecycle.md` |
 
             ## Cross-References
 
@@ -110,6 +111,31 @@ agents-skill:
             surface is identical-by-design, umbrella-only, or deliberately-forked - so a shared
             file is never copied into a fork and a fork is never silently re-synced. This skill
             documents the mechanism; the rulebooks stay harness-neutral.
+
+            ## Todo ledger & interruption safety
+
+            Durable in-flight state lives in the session's **structured todo ledger** — the
+            harness's todo primitive. It is the ONE session-scoped record of what is in
+            flight, and it preserves work across an interruption only when it is treated
+            as durable. Full procedure and the harness-binding detail:
+            `references/hooks-and-lifecycle.md` ("Todo ledger & interruption safety").
+
+            - **The ledger IS the todo primitive.** Maintain it as the durable,
+              session-scoped ledger of in-flight work, not a scratch list rewritten each
+              turn.
+            - **Reconcile FIRST, then act.** On ANY interrupting input — a fresh user
+              message, an automated watcher alert, a delegated/subagent report, or a
+              compaction — FIRST reconcile the ledger (keep every in-flight item; ADD the
+              new one; never drop), THEN act. An interruption is an **ADDITION, not a
+              reset**; never start a new list from scratch.
+            - **Long operations are ledger-first.** Before starting any long-running
+              operation, ensure the ledger reflects it, so a later interruption resumes
+              from STATE, not memory.
+
+            The umbrella rulebook states this as rule 11 (`AGENTS.md`, "Todo ledger &
+            interruption safety") and points here for the detail. Where this guidance
+            itself belongs is owned by the sibling `/charly-internals:skills` ("Where
+            guidance belongs"): mandate in `AGENTS.md`, detail in the skill.
         references:
             - name: agent-roster
               content: |
@@ -9539,6 +9565,45 @@ skills-skill:
             | Operationalization / matrix / catalog / worked example (the HOW) | The ONE owning skill (see the Authoritative-copy registry below) |
             | Version history / past changes / renames / cutover narration | the repo's `CHANGELOG/` (per-CalVer `<YYYY.DDD.HHMM>.md`) — never the project rulebook or a skill |
             | Long-term thesis / vision / aspiration ("why & where it's going") | `VISION.md` (repo root) — never restating command usage, architecture, or history |
+
+            ## Where guidance belongs
+
+            Every new fact belongs on exactly ONE surface, and every surface has a reader.
+            Choosing the surface wrong either duplicates the fact (two copies drift
+            apart) or hides it where its reader never looks:
+
+            | Surface | Carries | Put a new fact there when |
+            |---|---|---|
+            | `README.md` | the user-facing overview — what the repo is, how to use it | the reader has never opened the source: what the component does, how to install/run/use it |
+            | `AGENTS.md` | the harness-neutral RULEBOOK — short, decisive policy (the WHAT and the MUST) | the fact is a hard rule, gate, or mandate every session must obey, or a pointer (trigger → owning skill) |
+            | the owning skill | the detailed HOW — procedure, matrices, catalogs, worked examples, command sequences | the fact is operationalization detail one rule needs, or how-to that would bloat the rulebook |
+            | `CHANGELOG/` | history — dated change notes, renames, completed cutovers, retired identifiers | the content is about the PAST (what changed, why, when). Never advice; nobody reads history for guidance |
+
+            "Mandate in the harness rulebook, detail in the skill" (below) is this same
+            split seen from the rule side: the rulebook states the mandate plus a pointer;
+            the owning skill carries the detail. README and `CHANGELOG/` are the other two
+            poles — the user overview and the history.
+
+            **Anti-patterns — each is a placement mistake, not a wording one:**
+
+            - **Policy prose drifting into a skill.** A MUST / gate / mandate written only
+              as skill prose: a session that loads the rulebook alone never sees it. The
+              rulebook states the mandate; the skill carries the how.
+            - **How-to bloating `AGENTS.md`.** Matrices, catalogs, worked examples, and
+              command sequences are detail — move them to the owning skill and leave the
+              rulebook the mandate plus a pointer; the rulebook stays short.
+            - **History kept in a rulebook.** Dated notes, rename narratives, and cutover
+              stories go to `CHANGELOG/<YYYY.DDD.HHMM>.md`; the rulebook and the skill state
+              only the standing rule, present tense, forward-looking.
+            - **Harness / file names leaking into harness-neutral policy prose.** `AGENTS.md`
+              is harness-neutral: name the ROLE (the agent, the watcher, the gate), never the
+              harness or a harness-specific file. Harness mechanics live in the per-harness
+              config or skill.
+
+            The umbrella rulebook's rule 11 ("Todo ledger & interruption safety") is a
+            worked example of the split: the rulebook states the MUST and names the owning
+            skill, and the sibling `/charly-internals:agents` owns the ledger procedure
+            (see `/charly-internals:agents`, "Todo ledger & interruption safety").
 
             ## Mandate in the harness rulebook, detail in the skill
 
