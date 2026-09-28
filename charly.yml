@@ -6025,6 +6025,28 @@ git-workflow-skill:
                      not activity. This is the same rule as B2b.1's "progress is a completed
                      validator run", stated for a per-item watch.
 
+                  ### A "new" event must be genuinely newer — never a stale fire
+
+                  A watcher must be armed against a **known baseline**, and a delta event fires
+                  only on a value NEWER than arm time — never merely *different* from an empty
+                  seed. An **empty seed is UNKNOWN**, not "no prior run": a transient `gh` failure
+                  or a not-yet-finished run leaves the seed blank, and a naively-armed watcher
+                  then treats an OLD completed run as new. Measured: an immediate validator
+                  watcher re-surfaced a run from ~90 minutes earlier as though it were fresh. The
+                  guards, all mandatory:
+
+                  - On arm, capture the baseline AND the arm wall-clock. A `verdict` fires only
+                    when the run's `createdAt` is **at/after arm time** (the helper returns
+                    `createdEpoch`) or its id differs from a KNOWN prior — not merely from blank.
+                  - **Treat an empty seed as UNKNOWN**: adopt the first observation as the new
+                    baseline WITHOUT firing. (For `comment`, an empty count from a transient
+                    failure is likewise UNKNOWN — never treat a real count as a rise from 0.)
+                  - `merged`/`closed`/`stall` baseline from the arm moment too, so pre-existing
+                    state never spuriously fires beyond the deliberate STATE semantics.
+
+                  A stale fire is noise that trains the operator to ignore the watcher; the
+                  discipline is the same "watch the outcome, not noise" rule as above.
+
                   A `stall` is the correct STALL/loop detector: **no new verdict within the window
                   while the scope is open+unmerged** (B2b.1). A re-arguing agent emits no new
                   verdicts; a peer waiting on a running validator does not stall. `STALL_MIN`
