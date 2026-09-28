@@ -6094,11 +6094,14 @@ git-workflow-skill:
                   exits, and re-arming is the caller's loop. How a wake REACHES the agent is
                   the harness's job, never the script's:
 
-                  - **opencode** — no background-completion notification by default (`task` is
-                    synchronous, `bash` blocks; `OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS`
-                    opts into async tasks) and config loads once (no hot reload); the
-                    documented push is `opencode run --session <ses_…> "<alert>"`, plus a
-                    durable inbox drained each turn. Binding: `.opencode/instructions.md`.
+                  - **opencode** — delivery is IN-PROCESS, never an `opencode run` subprocess
+                    (that starts a separate headless run, can race the live session, and
+                    interrupts the in-flight turn). A plugin under `.opencode/plugins/` holds
+                    the SDK `client` and delivers with `client.tui.showToast(...)` plus
+                    `client.session.prompt({ body: { noReply: true, parts: [...] } })` — the
+                    SDK's "inject context without triggering AI response", so an in-flight turn
+                    is NOT interrupted. (Omitting `noReply` / `promptAsync` starts a turn — the
+                    interruption this rule guards against.) Binding: `.opencode/instructions.md`.
                   - **Claude Code** — a `run_in_background` Bash child's completion notifies the
                     spawning session; re-arm after each wake.
                   - **Any other harness** — bind the script's exit / `--notify-cmd` to whatever
