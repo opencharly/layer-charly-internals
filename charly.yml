@@ -6242,18 +6242,22 @@ git-workflow-skill:
                   **The measured budget.** The account shares a **5000 calls/hr** core budget
                   (plus a separate GraphQL points budget, also 5000/hr). MEASURED 2026-09-28:
                   the pre-floor defaults (30s `gh_watch.sh` / 20s `pr_watch_many.sh` /
-                  15s `pr_state_watch.sh`) each poll, and `gh_watch.sh` issued **~5 gh calls per
-                  ITEM per poll** (a `/pulls` type probe, `/issues` state, `/pulls` merged,
-                  `/issues/comments`, and a `gh run list`). A 20s watcher over just **5 items** is
-                  ~90 calls/min = **~5400/hr** — a budget incident on its own — and repeated
-                  fast/stacked polls produced **HTTP 403** and dead watchers.
+                  15s `pr_state_watch.sh`) each poll, and `gh_watch.sh`'s `snapshot()` issued
+                  **6 REST calls per ITEM per poll** (a `/pulls` type probe, `/issues` state,
+                  `/pulls` merged, `/issues/comments`, a per-item `gh run list`, and
+                  `/issues` updated_at). At the old 20s default (3 polls/min) over just
+                  **5 items** that is 6 × 5 × 3 = **90 calls/min = 5400 calls/hr** — a budget
+                  incident on its own — and repeated fast/stacked polls produced **HTTP 403**
+                  and dead watchers.
 
                   The tools now make that arithmetic safe:
 
                   - **`gh_watch.sh` polls in ONE GraphQL request for the whole item list.**
-                    MEASURED with a call-counting `gh` wrapper, same items, same cadence: 6 items
-                    over 4 polls cost **73 gh calls (old) → 5 calls (new)** — calls-per-poll is a
-                    constant **1** for N items, independent of N.
+                    MEASURED with a call-counting `gh` wrapper (6 items, seed + one poll):
+                    **73 total gh invocations (old) → 3 (new)** — the new 3 are 2 GraphQL
+                    requests (seed + poll) plus 1 FREE `/rate_limit` read. The billable constant
+                    is **1 request per poll for N items, independent of N** (the old 6-per-item
+                    × N scaled with N).
                   - **Rate-limit discipline.** Before each poll the FREE `/rate_limit` endpoint is
                     read; below `WATCH_RATE_MIN` (default 200) the watcher **backs off**
                     (`--interval × WATCH_RATE_BACKOFF_FACTOR`, default 2, capped 600s) and logs
