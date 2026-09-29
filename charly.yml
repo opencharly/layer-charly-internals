@@ -6218,7 +6218,7 @@ git-workflow-skill:
 
                   ### One watcher, one poll per minute, and the API budget
 
-                  Three rules, all enforced by the tools — plus the numbers that motivate them:
+                  Four rules, all enforced by the tools — plus the numbers that motivate them:
 
                   - **ONE watcher per session.** Do not run several watchers on one scope; the
                     single-instance lock makes a re-arm take over a live peer, so extra arms are
