@@ -6253,11 +6253,13 @@ git-workflow-skill:
                   The tools now make that arithmetic safe:
 
                   - **`gh_watch.sh` polls in ONE GraphQL request for the whole item list.**
-                    MEASURED with a call-counting `gh` wrapper (6 items, seed + one poll):
-                    **3 gh invocations — 2 GraphQL requests (seed + poll) plus 1 FREE
-                    `/rate_limit` read.** The billable constant is **1 request per poll for N
-                    items, independent of N** (the old 6-per-item × N scaled with N), so a 60s
-                    watch is **~60 requests/hr for the whole list**.
+                    MEASURED with a call-counting `gh` wrapper, 6 items over TWO rounds (seed
+                    + one poll): **73 gh invocations (old) → 3 (new)**. The old 73 reconciles
+                    with the 6-per-item rate: (73 − 1 free `/rate_limit`) ÷ (6 items × 2
+                    rounds) = 6/item/poll. The new 3 are 2 GraphQL requests (seed + poll) plus
+                    1 FREE `/rate_limit` read — so the billable constant is **1 request per
+                    poll for N items, independent of N**, and a 60s watch is **~60 requests/hr
+                    for the whole list** whatever N is.
                   - **Rate-limit discipline.** Before each poll the FREE `/rate_limit` endpoint is
                     read; below `WATCH_RATE_MIN` (default 200) the watcher **backs off**
                     (`--interval × WATCH_RATE_BACKOFF_FACTOR`, default 2, capped 600s) and logs
