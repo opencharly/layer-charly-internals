@@ -1080,7 +1080,13 @@ agents-skill:
                   ## The responsibility matrix — who owns what
 
                   **Orchestrator** (the persistent main session, ×1, most-capable model):
-                  - Owns: architectural integrity (every placement judged against the
+                  - Owns: the ENTIRE PR SURFACE — creates every PR, runs every push (a
+                    SINGLE push after it has FULLY validated the change AND the PR body
+                    itself), reads every `charly/pr-validator` verdict IN FULL (every block,
+                    every comment disposition), and ensures EVERY finding is fixed before the
+                    next push (all findings in ONE commit; never a partial fix; never a push at
+                    the block limit). Sub-agents may commit freely; only the orchestrator
+                    pushes. Also owns: architectural integrity (every placement judged against the
                     end-state; breaches corrected at once); the plan/contract and all scope
                     rulings (every STOP-and-ask terminates here); independent
                     RDD-verification of every teammate decision (bidirectional — never
@@ -1105,8 +1111,13 @@ agents-skill:
                   - Owns: its one cutover end-to-end — design within the contract,
                     implementation, unit gates (build/test/lint/gofmt/cue-gen-repro), short
                     foreground checks (`charly box validate` / `charly check box`), R5
-                    sweeps, ADE plans, CHANGELOGs, authoring its PRs, fix-rounds in-place on
-                    CHANGES-REQUESTED, handoff packages when context runs short.
+                    sweeps, ADE plans, CHANGELOGs, fix-rounds in-place on the orchestrator's
+                    read of a verdict, handoff packages when context runs short. It COMMITS
+                    freely in its worktree (many commits fine).
+                  - Never: creates a PR; pushes; writes a PR body; reads or dispositions a
+                    `charly/pr-validator` verdict; decides a merge; coordinates with other
+                    sessions. It hands the worktree back with a precise report — the
+                    orchestrator validates, pushes, reads the verdict, and gates the fixes.
                   - Delegates: mechanical bulk to transient sub-agents it briefs and reviews
                     (never rubber-stamps).
                   - Never: runs a full `charly check run` / any bed roster (the
@@ -1127,8 +1138,8 @@ agents-skill:
                   - Owns: one bounded, file-disjoint unit (relocation batch / survey / spike /
                     golden harness) and its own unit verification; returns verbatim results
                     to its spawner.
-                  - Never: full beds; commits/pushes/PRs; scope decisions; work beyond its
-                    brief.
+                  - Never: full beds; PUSHES or PRs (it may commit in its own worktree);
+                    scope decisions; work beyond its brief.
 
                   **Design reserve** (a former implementer kept addressable for keystone
                   questions):
