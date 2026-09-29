@@ -126,8 +126,6 @@ agents-skill:
 
             **Concrete case.** In one session `coord_comment` failed while `coord_watch` worked. Both are registered by the SAME plugin, loaded from the workspace — but `coord_comment` shells out to `marketplace/scripts/coord.sh` while `coord_watch` shells out to `marketplace/scripts/gh_watch.sh`. `gh_watch.sh` was already in the pinned `marketplace` gitlink; `coord.sh` had merged LATER and the gitlink had not advanced, so the tool reported "coord.sh not found — sync the marketplace pin". The failure was a stale `marketplace` gitlink, not a defect in the plugin that bound the script.
 
-            ## The harness-adapter CONFIG mechanism (layer-charly-internals#49)
-
             ## Todo ledger & interruption safety
 
             Durable in-flight state lives in the session's **structured todo ledger** — the
