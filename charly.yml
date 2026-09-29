@@ -502,15 +502,25 @@ agents-skill:
 
                   ### Rotate on stall — stop a stalled session, spawn a fresh one
 
-                  **The hard trigger.** If a subagent/teammate has produced **no
-                  ARTIFACT** — a pushed commit, an opened PR, a merge, a tag, or measured
-                  output — after **two re-briefs**, or its session passes **~50 messages
-                  without a produced artifact**, **STOP it and spawn a FRESH subagent with
-                  a clean brief.** Do not append a third correction. Re-briefing a stalled
-                  session is the one reuse that is never legitimate: it is the failure this
-                  rule exists for — and it reads like continue-same-task while being its
-                  opposite (a stalled session is not continuing its own unit; it is not
-                  producing at all).
+                  **The hard trigger. Rotate on ARTIFACT + CADENCE, never on a turn count.**
+                  If a subagent/teammate has produced **no ARTIFACT** — a pushed commit, an
+                  opened PR, a merge, a tag, or measured output — AND either (a) the
+                  orchestrator has re-briefed the **same task more than twice**, or (b) the
+                  session has been **idle past the window with no artifact**, or (c) it is
+                  **looping** (the same failing action repeated, no artifact change), then
+                  **STOP it and spawn a FRESH subagent with a clean brief.** Do not append a
+                  third correction. Re-briefing a stalled session is the one reuse that is
+                  never legitimate: it is the failure this rule exists for — and it reads
+                  like continue-same-task while being its opposite (a stalled session is not
+                  continuing its own unit; it is not producing at all).
+
+                  **A "message" is an ASSISTANT TURN, never a stall signal.** Do NOT rotate
+                  on a message/turn count. Counting turns penalises an agent for WORKING: a
+                  measured session rotated for "79 messages / no artifact" was **74 assistant
+                  turns** with `shell`/`read`/`write` firing ~73× each over ~37 min — it was
+                  reading, writing, and running its task. Steady **cadence** (tool calls) is
+                  working; give it room. (The `agent_progress` tool surfaces the cadence and
+                  the verdicts for exactly this — see "Monitoring agent progress in OpenCode".)
 
                   **Why re-tasking a stalled session fails — the measured evidence.** A
                   session ran **7 hours / 351 messages** and produced **no artifact** on a
@@ -518,7 +528,9 @@ agents-skill:
                   directly. Each appended correction grows the context with dead ends and
                   superseded instructions, so the worker gets slower and less likely to
                   converge — not closer. The cost of a clean restart is one fresh brief;
-                  the cost of nursing the stalled session is the whole elapsed window.
+                  the cost of nursing the stalled session is the whole elapsed window. (The
+                  "351 messages" is the *symptom of the thrash*, not the trigger — the
+                  trigger is the absent artifact and the repeated re-briefs.)
 
                   **Artifacts, never liveness.** An idle signal, a heartbeat, a
                   `TeammateIdle` event, or "still working / still investigating" is NOT
