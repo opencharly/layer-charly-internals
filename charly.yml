@@ -26,6 +26,7 @@ agents-skill:
             - "Verify a cutover by running the R10 beds (drive `charly check run <bed>`)"
             - "Evaluate/audit a deployment config (image or deploy, yours)"
             - "Sub-agents / dynamic workflows / agent teams / agent-lifecycle or commit-push gate hooks"
+            - "Monitor a subagent's progress / is this agent stalled / idle or looping worker / whether to rotate or take over"
             - "Todo ledger / interruption safety / never drop in-flight work across a new instruction"
         content: |
             # Agents, Workflows & Teams
@@ -105,6 +106,39 @@ agents-skill:
             command; the worker discovers the value at run time. Full rule and the measured
             `.github#141` evidence: `references/program-discipline.md` ("Volatile facts are
             DISCOVERED, never baked into a brief").
+
+            ## Monitoring agent progress in OpenCode — `agent_progress`, artifact + cadence, never a counter
+
+            An orchestrator monitors subagents badly: turn counts, "idle", vibes. The REAL
+            signal is the **transcript** — what the agent is actually doing. In OpenCode the
+            `.opencode/plugins/agent-progress.ts` plugin registers the **`agent_progress`**
+            custom tool (pure TypeScript, no `.sh`, no `marketplace` pin) which reads the
+            opencode store **read-only** and reports, per session, the turns/span/last-activity
+            age, the tool mix, the LAST action (text/reasoning snippet + last tool + its
+            input), the artifact hints, and a VERDICT.
+
+            - **A "message" is an ASSISTANT TURN — never a stall signal.** `session_message`
+              rows with `type='assistant'` are turns; `data.content` is
+              `[{type:"reasoning"|"text"|"tool"}]`. Counting them penalises an agent for
+              WORKING, so the monitor SHOWS the count and never keys a verdict on it.
+            - **Read the transcript, then judge.** The four states are the rulebook model:
+              **artifact** (a CHANGED commit/PR/merge/tag/measured output) → progress;
+              **cadence** (steady `shell`/`read`/`write`/`edit` calls) → working, give room;
+              **loop** (the same tool+input repeated, no artifact change) → the pathology;
+              **idle** (no turns past the window AND no artifact).
+            - **The verdict** the tool returns: `WORKING` (recent turns + tool cadence) /
+              `IDLE` (no turns past `windowMin`, default 15, and no artifact) / `LOOP` /
+              `DONE` (a final report, no pending action).
+            - **Rotate/take over ONLY on** >2 orchestrator re-briefs of the same task,
+              idle-past-window with no artifact, or a loop. **NEVER on turn count.**
+            - Use it with `agent_progress({ all: true })` (the default active set) or
+              `agent_progress({ session: "ses_…" })`; `windowMin` tunes the idle window.
+              It is async, honors `context.signal`, and fails CLEARLY — it never fabricates a
+              verdict.
+
+            Mechanism, the verified schema (`session_v2` + `session_message`; there is NO
+            `session` table), and the gate: `references/hooks-and-lifecycle.md` ("Monitoring
+            agent progress in OpenCode").
 
             ## The harness-adapter CONFIG mechanism (layer-charly-internals#49)
 
@@ -865,6 +899,56 @@ agents-skill:
                     bed, per-worktree self-freeze.
                   - `references/agent-roster.md` — the roster, the shipped workflows, the
                     team primitive.
+
+                  ## Monitoring agent progress in OpenCode
+
+                  OpenCode ships the `agent_progress` custom tool
+                  (`.opencode/plugins/agent-progress.ts`, pure TypeScript). It answers the
+                  orchestrator's real question — *what is this subagent actually doing?* — from
+                  the **transcript**, not a turn count.
+
+                  **A "message" is an ASSISTANT TURN, never a stall signal.** In the opencode
+                  store, `session_message` rows with `type='assistant'` are turns, and an
+                  assistant row's `data.content` is
+                  `[{type:"reasoning"|"text"|"tool", …}]`. Counting turns penalises an agent
+                  for WORKING (a measured session rotated for "79 messages / no artifact" was 74
+                  assistant turns with `shell`/`read`/`write` firing ~73× each — it was reading,
+                  writing, and running its task). The tool SHOWS the count and never keys a
+                  verdict on it.
+
+                  **Data source (VERIFIED 2026-09-29, opencode v2.0.18).** The store is a
+                  SQLite database at `$XDG_DATA_HOME/opencode/opencode.db`
+                  (`~/.local/share/opencode/opencode.db` when `XDG_DATA_HOME` is unset;
+                  `OPENCODE_DB` overrides, for tests). The live schema is `session_v2` (session
+                  rows) + `session_message` (transcript); there is **NO `session` table**. It is
+                  read **read-only** — `new Database(path, { readonly: true })` under
+                  `bun:sqlite` (the shipped opencode runtime), `new DatabaseSync(path,
+                  { readOnly: true })` under `node:sqlite` (plain node / the gate) — never a
+                  write, never a mock.
+
+                  **The report, per session:** id + title/slug; **turns**, **span**
+                  (first→last), **last-turn / last-event age**; the **tool mix**; the **last
+                  action** (the text/reasoning snippet + the last tool + its input); **artifact
+                  hints** (`owner/repo#N`, `gh pr merge`, `merged`, `v…` tags, `pushed`); and a
+                  **VERDICT**.
+
+                  **The verdict is the rulebook model** — **WORKING** (recent turns + tool
+                  cadence) / **IDLE** (no turns past the window and no artifact) / **LOOP** (the
+                  same tool+input repeated, no artifact) / **DONE** (a final report,
+                  `finish=stop`, no pending action). Rotate/take over **ONLY on** >2
+                  orchestrator re-briefs of the same task, idle-past-window with no artifact, or
+                  a loop — **never on turn count**. Call it with
+                  `agent_progress({ all: true })` (the default active set) or
+                  `agent_progress({ session: "ses_…" })`; `windowMin` (default 15) tunes the
+                  idle window. Async, `context.signal`-aware, and it fails CLEARLY
+                  (`cannot open …`, `no session …`) — it never fabricates a verdict.
+
+                  The gate is `scripts/check-agent-progress.mjs`: **(A)** static — no
+                  `.sh`/`spawnSync`/`Bun.spawn`, read-only both drivers, the documented path;
+                  **(B)** unit — the classifier INCLUDING the RCA regression (a
+                  turn-count-heavy-but-working transcript is `WORKING`, not stalled) and a REAL
+                  read-only SQLite fixture; **(C)** `LIVE_OPENCODE=1` drives the real binary and
+                  calls the tool (live-or-skip, visibly).
             - name: orchestration-model
               content: |
                   # Orchestration Model
