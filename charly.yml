@@ -1111,6 +1111,7 @@ agents-skill:
                   - Owns: its ONE task end-to-end — design within the contract,
                     implementation, unit gates (build/test/lint/gofmt/cue-gen-repro), short
                     foreground checks (`charly box validate` / `charly check box`), R5
+<<<<<<< HEAD
                     sweeps, ADE plans, CHANGELOGs, **reading `charly/pr-validator`'s results
                     IN FULL and fixing EVERY finding in ONE commit — that IS the worker's
                     job**, handoff packages when context runs short. It COMMITS freely in its
@@ -1124,6 +1125,15 @@ agents-skill:
                   - Never: creates a PR; pushes; writes a PR body; decides a merge;
                     coordinates with other sessions. It hands the worktree back with a precise
                     report — the orchestrator validates, pushes, and gates the next push.
+=======
+                    sweeps, ADE plans, CHANGELOGs, fix-rounds in-place on the orchestrator's
+                    read of a verdict, handoff packages when context runs short. It COMMITS
+                    freely in its worktree (many commits fine).
+                  - Never: creates a PR; pushes; writes a PR body; reads or dispositions a
+                    `charly/pr-validator` verdict; decides a merge; coordinates with other
+                    sessions. It hands the worktree back with a precise report — the
+                    orchestrator validates, pushes, reads the verdict, and gates the fixes.
+>>>>>>> origin/main
                   - Delegates: mechanical bulk to transient sub-agents it briefs and reviews
                     (never rubber-stamps).
                   - Never: runs a full `charly check run` / any bed roster (the
