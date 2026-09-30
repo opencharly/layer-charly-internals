@@ -1108,16 +1108,22 @@ agents-skill:
 
                   **Implementation teammate** (×N cost-scaled, one per independent cutover,
                   one worktree each):
-                  - Owns: its one cutover end-to-end — design within the contract,
+                  - Owns: its ONE task end-to-end — design within the contract,
                     implementation, unit gates (build/test/lint/gofmt/cue-gen-repro), short
                     foreground checks (`charly box validate` / `charly check box`), R5
-                    sweeps, ADE plans, CHANGELOGs, fix-rounds in-place on the orchestrator's
-                    read of a verdict, handoff packages when context runs short. It COMMITS
-                    freely in its worktree (many commits fine).
-                  - Never: creates a PR; pushes; writes a PR body; reads or dispositions a
-                    `charly/pr-validator` verdict; decides a merge; coordinates with other
-                    sessions. It hands the worktree back with a precise report — the
-                    orchestrator validates, pushes, reads the verdict, and gates the fixes.
+                    sweeps, ADE plans, CHANGELOGs, **reading `charly/pr-validator`'s results
+                    IN FULL and fixing EVERY finding in ONE commit — that IS the worker's
+                    job**, handoff packages when context runs short. It COMMITS freely in its
+                    worktree (many commits fine).
+                  - Briefed with: exactly ONE task, **fully planned by the orchestrator as it
+                    would plan for itself** — the exact files, edits, commands, evidence and
+                    acceptance, with the **relevant skill content EMBEDDED** (read by the
+                    orchestrator, not merely referenced). A brief that leaves ANY decision to
+                    the worker is an orchestrator DEFECT and is not dispatched. **One task per
+                    agent — never several PRs/findings in one brief.**
+                  - Never: creates a PR; pushes; writes a PR body; decides a merge;
+                    coordinates with other sessions. It hands the worktree back with a precise
+                    report — the orchestrator validates, pushes, and gates the next push.
                   - Delegates: mechanical bulk to transient sub-agents it briefs and reviews
                     (never rubber-stamps).
                   - Never: runs a full `charly check run` / any bed roster (the
