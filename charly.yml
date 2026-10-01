@@ -107,15 +107,19 @@ agents-skill:
             `.github#141` evidence: `references/program-discipline.md` ("Volatile facts are
             DISCOVERED, never baked into a brief").
 
-            ## The harness-adapter CONFIG mechanism (layer-charly-internals#49)
+            ## The harness-config LOCATION (umbrella-only; layer-charly-internals#49)
 
-            Harness adaptation lives in the **per-harness config at the repo root**, never in
-            the rulebook: a shared, byte-identical core of gate scripts (drift-checked by
-            `charly task harness`) plus deliberate per-harness forks and a clone-level git hook
-            installed with `charly task hooks`. The two halves coexist by classification - each
-            surface is identical-by-design, umbrella-only, or deliberately-forked - so a shared
-            file is never copied into a fork and a fork is never silently re-synced. This skill
-            documents the mechanism; the rulebooks stay harness-neutral.
+            ALL harness config lives in the **umbrella root** (`opencharly/opencharly`) and
+            NOWHERE else: `.claude/`, `.opencode/`, `.codex/`, `.pi/`, `.reasonix/`, and
+            `opencode.json`. No submodule or sibling repo — `.github`, a `distro-*`/`layer-*`/
+            `pod-*`/`plugin-*` repo, or `charly/` — carries a copy, and there is **no parity
+            gate**: the former `charly task harness` (which compared umbrella↔`charly/`
+            byte-identical files) is DELETED. Sessions root at the umbrella (umbrella
+            `AGENTS.md` rule 4), and harness config resolves from the SESSION'S project root, so
+            config anywhere else would bind a situation that cannot legally occur — **one root,
+            one config home**. A rulebook (`AGENTS.md`) is NOT harness config and stays in its
+            own repo. The clone-level git hook is installed per clone with `charly task hooks`.
+            This skill documents the mechanism; the rulebooks stay harness-neutral.
 
             ## A plugin resolves DIFFERENT PIECES FROM DIFFERENT REFS — verify the pin its BACKEND resolves from (R1 2026-09-29)
 
@@ -3951,8 +3955,8 @@ git-workflow-skill:
             subrepo's own rulebook before touching it; `charly/AGENTS.md` owns R0–R10 inside
             `charly/`). The umbrella's own commands — never an ad-hoc substitute — are:
             `charly task sync` (policy-B pin bump), `charly task verify` (the full pinning gate — there is
-            NO CI gate), `charly task hooks` (install the per-commit gate), `charly task harness` (config
-            parity), `charly task map`. Hard rules there: **never edit inside a submodule** (change
+            NO CI gate), `charly task hooks` (install the per-commit gate),
+            `charly task map`. Hard rules there: **never edit inside a submodule** (change
             lands by PR to the owning repo; the umbrella only records gitlinks), run submodule
             git through `git -C <absolute-path>` from the umbrella root, no worktrees inside
             submodules, pin only MERGED refs, and bound every command's output (SIGPIPE is
@@ -5509,10 +5513,7 @@ git-workflow-skill:
                     gate** for this; `charly task verify` IS the gate. Run it on the final tree and
                     paste the output (R7: a green `git status` proves nothing).
                   - **`charly task hooks`**: install the per-commit gate once per clone (sets
-                    `core.hooksPath hooks`); policy B + harness parity then run on every commit.
-                  - **`charly task harness`**: the root harness
-                    config mirrors the source repo's; keep it in sync, never fork it silently
-                    (AGENTS.md rule 8).
+                    `core.hooksPath hooks`); policy B then runs on every commit.
                   - **`charly task map`**: list every submodule with its pin and sync state.
                   - **`charly task skills`** → `scripts/sync-dispatcher.sh`: splice the generated R0
                     dispatcher from the pinned marketplace into `AGENTS.md`.
