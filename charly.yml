@@ -1769,7 +1769,7 @@ agents-skill:
                     two.
                   - **Pre-warm the shared base once.** Same-base beds (e.g. two `cachyos`
                     images) share cached base layers in podman storage, and the
-                    content-derived `EffectiveVersion` keeps the base `FROM`-SHA stable so
+                    source-derived `ai.opencharly.candy_version` keeps the base `FROM`-SHA stable so
                     cache misses don't cascade. Build the base (or the first same-base bed)
                     once before fan-out → every sibling bed's build is incremental,
                     rebuilding only changed layers.
@@ -2035,7 +2035,8 @@ capabilities-skill:
 
             | Field | Label const | What it stores |
             |---|---|---|
-            | `Version` | `LabelVersion` (`ai.opencharly.version`) | The image's content-derived **`EffectiveVersion`** — its dedicated `version:` if set, else the highest layer `version:` across the chain (`deploykit.ComputeEffectiveVersions`, called from `candy/plugin-build/resolve.go`'s build-engine RESOLVE). NOT the per-build tag; stable when no layer changed. Short-name resolution + `charly clean` retention prefer this label over the tag. Also the "is this an charly image?" presence sentinel (`ExtractMetadata` returns nil when empty). |
+            | `Version` | `LabelVersion` (`ai.opencharly.version`) | **No longer emitted** — the schema-versioning removal cutover deleted the authored `version:`, and `sdk/deploykit/write_labels.go` drops the label; it survives on the wire type only. The local-image resolver still READS it as its primary ordering key (`spec/container/local_image_coneb.go`), so with the label absent, ordering falls through to the `:<calver>` build tag. The charly-vs-non-charly presence sentinel is **`ai.opencharly.box`**, not this label. |
+            | `CandyVersion` | `LabelCandyVersion` (`ai.opencharly.candy_version`) | The candy's source-derived version — its **GIT TAG**, set by the loader (`sdk/loaderkit/scan_orchestrate.go` assigns `winner.GitTag`; arbiter `sdk/loaderkit/candy_version.go`). The surviving per-candy identity now that the authored `version:` is gone. |
             | `Service` | `LabelService` (`ai.opencharly.service`) | **Structured JSON array of `CapabilityService`** — not just names. 23 per-entry fields including `kind`, `events`, `auto_start`, `start_retries`, `priority`, `init`, `layer`. See "LabelService" below. |
             | `Init` | `LabelInit` | Init system name (supervisord / systemd / none). |
             | `InitDef` | `LabelInitDef` (`ai.opencharly.init_def`) | **`*CapabilityInitDef`** — the build-resolved runtime subset of the init: vocabulary entry: `entrypoint`, `fallback_entrypoint`, `management_tool`, `management_commands`. Makes the init system TRUE single-source: `kit.ResolveEntrypointFromMeta` (container entrypoint) and `resolveInitDefFromMeta` (in-container service-management) read this label as their ONLY source. A frozen `wellKnownInitDefs` registry used to back them for pre-`init_def`-label images; it was deleted (it was triplicated across sdk/kit, plugin-pod and plugin-deploy-pod, and frozen at supervisord + systemd, so it could never answer for a third init system such as openrc). An image without the label now errors, naming the rebuild, rather than resolving a guessed management CLI. Because the contract travels in the label, init systems declared ONLY in the embedded vocabulary now work at runtime too. |
@@ -2434,8 +2435,8 @@ cutover-policy-skill:
 
             ## Required for every breaking change
 
-            - A new **migration-table entry** in `candy/plugin-migrate/migrations.cue` (a declarative `ops:` list, or an `apply:` `goHooks` hook for a structural reshape) PLUS a matching `#SchemaVersion` bump in `spec/schema/version.cue` (the spec repo — landed + tagged first, see `/charly-build:migrate`), applied via `charly task cue-gen`; the entry's CalVer is strictly greater than the current HEAD. Every cutover is one idempotent step applied by the op-walker on the one `charly migrate` command — there are no per-cutover sub-verbs. Running `charly migrate` twice is a no-op. See `/charly-build:migrate`.
-            - A **fresh release git tag** `v<YYYY.DDD.HHMM>` — ONE per merge, applied by the org-wide `tag-on-merge` workflow at MERGE from the current UTC merge time (never by the author at push time; author-time stamps collide/mis-order across concurrent PRs), **decoupled** from the `charly.yml` `version:` field (the schema version, bumped only when a cutover raises `#SchemaVersion`). Tag EVERY landing, including one that does NOT bump `version:` (content removal — a submodule extraction, an image drop). Tags are **immutable** — only ever added, never moved or force-pushed. Every component is fixed-width zero-padded (4-digit year, 3-digit day-of-year, 4-digit HHMM) so tags sort chronologically under a plain alphanumeric sort; tag-on-merge computes `v$(date -u +%Y.%j.%H%M)` at merge. Every repo (superproject, `box/<distro>`, `plugins`, `docs`) is tagged on its own merged HEAD — the tag marks the merge, not the schema, so no `charly.yml` is required; the proxy-consumed root-module repos (`sdk`, `spec`, `plugin-gh`) use their Go-module `v0.<YYYYDDD>.<HHMM leading-zeros-stripped>` scheme instead (a semver requirement, not an exemption). See `/charly-build:migrate` "Per-merge release git tags", `/charly-internals:git-workflow` "CalVer", and the project rulebook "Post-Execution Policies".
+            - A new **migration-table entry** in `candy/plugin-migrate/migrations.cue` (a declarative `ops:` list, or an `apply:` `goHooks` hook for a structural reshape). The table is an ORDERED, version-free list — there is no `#SchemaVersion`, no `version:` stamp, and no floor to bump, so the entry IS the whole schema-side change. Every step is one idempotent reshape applied by the op-walker on the one `charly migrate` command — there are no per-cutover sub-verbs, and running `charly migrate` twice is a no-op. See `/charly-build:migrate`.
+            - A **fresh release git tag** `v<YYYY.DDD.HHMM>` — ONE per merge, applied by the org-wide `tag-on-merge` workflow at MERGE from the current UTC merge time (never by the author at push time; author-time stamps collide/mis-order across concurrent PRs). Tag EVERY landing — a content change, a submodule extraction, an image drop. Tags are **immutable** — only ever added, never moved or force-pushed. Every component is fixed-width zero-padded (4-digit year, 3-digit day-of-year, 4-digit HHMM) so tags sort chronologically under a plain alphanumeric sort; tag-on-merge computes `v$(date -u +%Y.%j.%H%M)` at merge. Every repo (superproject, `box/<distro>`, `plugins`, `docs`) is tagged on its own merged HEAD — the tag marks the merge, so no `charly.yml` is required; the proxy-consumed root-module repos (`sdk`, `spec`, `plugin-gh`) use their Go-module `v0.<YYYYDDD>.<HHMM leading-zeros-stripped>` scheme instead (a semver requirement, not an exemption). See `/charly-build:migrate` "Per-merge release git tags", `/charly-internals:git-workflow` "CalVer", and the project rulebook "Post-Execution Policies".
             - **Hard load-time errors** for any residual legacy field, with a one-line remediation hint pointing at the migration command.
             - **Deletion — in the same PR** — of every Go type, function, CLI flag, OCI label, YAML field, skill doc paragraph, and test fixture that references the removed surface.
             - **Relocation step-sequence PARITY (when the cutover relocates a dispatcher, orchestrator, or runner).** Before relocating, ENUMERATE the original's per-CLASS behavior arms — e.g. bring-up / update / teardown × each substrate or shape class — and PROVE each class's step sequence matches the original in the relocated code. Fixing one arm of a class while missing its siblings is the CHARACTERISTIC relocation defect: a generic fallback that silently mis-handles a special class passes every unit test and fails ONLY on that class's live bed. The acceptance roster MUST therefore carry a bed per SPECIAL class (a gate that cannot fail on the class proves nothing — see `/charly-check:check` "R10 gate by change class").
@@ -3303,15 +3304,20 @@ generate-source-skill:
                   the upstream image's content is unchanged), the whole rest of the
                   build cache-hits. A CalVer bump on an unchanged upstream is free.
 
-                  The `ai.opencharly.version` LABEL baked into each image is likewise NOT a
-                  per-build timestamp — it's the content-derived `EffectiveVersion` (the image's
-                  dedicated `version:`, else the highest layer `version:` across the chain; computed
-                  by `deploykit.ComputeEffectiveVersions` (`sdk/deploykit/effective_version.go`), called from
-                  `candy/plugin-build/resolve.go`'s build-engine resolve — the former `charly/effective_version.go`
-                  wrapper and the DELETED `charly/generate.go`'s `NewGenerator` are gone, K-wave 2). It is STABLE across
-                  builds when no layer changed, so it does not shift the image's config → SHA and
-                  therefore does not cascade cache-misses to children via `FROM`. Only a real
-                  content change (a bumped layer `version:`) moves it.
+                  The former `ai.opencharly.version` LABEL is **no longer emitted**: the
+                  schema-versioning removal cutover deleted the authored `version:`, so
+                  `sdk/deploykit/write_labels.go` drops the label and charly has no emitter left. The
+                  surviving per-candy identity is `ai.opencharly.candy_version`, read from
+                  `layer.GetVersion()` (`CandyModel.Version`), which the loader sets from the candy's
+                  **git tag** (`sdk/loaderkit/scan_orchestrate.go` assigns `winner.GitTag`; the arbiter
+                  is `sdk/loaderkit/candy_version.go`) — a source-derived value, STABLE across builds
+                  when no layer changed, so it does not shift the image's config → SHA and therefore
+                  does not cascade cache-misses to children via `FROM`. The local-image resolver still
+                  READS `ai.opencharly.version` as its primary ordering key (`spec/container/
+                  local_image_coneb.go`), but the label is absent on a locally-composed image, so
+                  ordering falls through to the `:<calver>` build tag. `EffectiveVersion` survives
+                  only as a documented, never-populated wire field (`schema/resolvedbox.cue`: the
+                  highest candy git tag across the chain, else the base image's version).
 
                   Cache-miss only happens when something in the build input genuinely
                   changes: the parent image's content (different SHA resolved by the
@@ -3325,7 +3331,7 @@ generate-source-skill:
 
                   | Label | Type | Example |
                   |-------|------|---------|
-                  | `ai.opencharly.version` | string | content-derived `EffectiveVersion` (the image's dedicated `version:`, else the highest layer `version:` across the chain — NOT the per-build tag), e.g. `"2026.144.1443"`. Resolution prefers this label over the tag (`sdk/kit/local_image.go`, moved from `charly/local_image.go` in P12a); also the "is this an charly box?" presence sentinel read by `ExtractMetadata` |
+                  | `ai.opencharly.candy_version` | string | the candy's source-derived version — its GIT TAG (`sdk/loaderkit/scan_orchestrate.go`), e.g. `"2026.144.1443"` |
                   | `ai.opencharly.box` | string | `"openclaw"` |
                   | `ai.opencharly.registry` | string | `"ghcr.io/opencharly"` (omitted if empty) |
                   | `ai.opencharly.bootc` | string | `"true"` (omitted if false) |
@@ -4097,7 +4103,7 @@ git-workflow-skill:
               automation (required workflow, native auto-merge, tag-on-merge CalVer), and the
               new-repo setup checklist.
             - `/charly-internals:cutover-policy` — one-phase, atomic-commit, R10-at-the-end.
-            - `/charly-build:migrate` — `version:` ↔ tag coupling, per-merge tags, push order.
+            - `/charly-build:migrate` — the version-free migration table, per-merge tags, push order.
             - `/charly-build:reconcile` — cross-repo `@github` pin alignment used by B6.
             - `/charly-check:check` — the check-coverage gate (R10) every change must satisfy.
             - `/charly-internals:root-cause-analyzer` — run on any FAIL before re-trying.
@@ -4460,8 +4466,8 @@ git-workflow-skill:
                      module version — e.g. superproject `v2026.185.0751` ⇄ sdk `v0.2026185.751`) —
                      whenever the cutover touched sdk content;
                   1. each `box/<distro>` submodule — PR → auto-merge + tag-on-merge tags (it has `charly.yml`);
-                  2. `plugins` — PR → auto-merge **+ tag-on-merge tags `v<YYYY.DDD.HHMM>`** (no `charly.yml`,
-                     so no schema `version:` bump — but the tag marks the merge, same as every repo);
+                  2. `plugins` — PR → auto-merge **+ tag-on-merge tags `v<YYYY.DDD.HHMM>`** (it carries no `charly.yml`; the
+                     tag marks the merge, same as every repo);
                   3. the superproject — stage the now-MERGED submodule pointers (a touched sdk:
                      adopt the tagged sdk release as the new shared pinned require in every
                      module — `charly task mods-tidy` re-syncs go.sum and the canonical-go.mod gate
@@ -5330,8 +5336,8 @@ git-workflow-skill:
 
                   - **The author writes no CalVer and no CHANGELOG file.** The PR body IS the
                     changelog (title + body are the release-notes source). For a schema cutover
-                    the author still bumps `#SchemaVersion` / `migrations.cue` strictly above
-                    current `main` — but the final CalVer for tag and changelog filename is minted
+                    the author still ships the `migrations.cue` entry in the same change (the
+                    table is version-free — there is no `#SchemaVersion` to bump) — but the final CalVer for tag and changelog filename is minted
                     at merge, never by the author.
                   - **tag-on-merge, at merge:** `VER=$(date -u +%Y.%j.%H%M)` (guard uniqueness — if
                     `v$VER` or `CHANGELOG/$VER.md` already exists on the current `main`, advance to
@@ -5341,17 +5347,17 @@ git-workflow-skill:
                     bypass actor for the single CHANGELOG path); then tag the merged HEAD —
                     `git tag -a v$VER -m "<subject>" <merged-HEAD>` and
                     `git push origin refs/tags/v$VER` (every repo;
-                    `sdk`, `spec`, and `plugin-gh` substitute their Go-module `v0.<…>` form). A schema cutover's
-                    `#SchemaVersion` + `version:` + `migrations.cue` re-stamp stays strictly above
-                    the current HEAD.
+                    `sdk`, `spec`, and `plugin-gh` substitute their Go-module `v0.<…>` form). A schema cutover
+                    ships its `migrations.cue` entry in the change that alters the schema; there is
+                    no `#SchemaVersion` / `version:` re-stamp.
 
-                  One fresh stamp per merge, immutable (only ever added), independent of `charly.yml`
-                  `version:` (the schema version, bumped only by a cutover raising `#SchemaVersion`).
+                  One fresh stamp per merge, immutable (only ever added) — the tag marks the MERGE,
+                  the `migrations.cue` entry marks the SCHEMA.
                   Every repo (superproject, `box/<distro>`, `plugins`, `docs`) mints `v$VER` on its
                   merged HEAD; `sdk`, `spec`, and `plugin-gh` (the proxy-consumed root-module repos) use their Go-module `v0.<YYYYDDD>.<HHMM
                   leading-zeros-stripped>` scheme (not an exemption — Go modules require semver, which
                   forbids a leading-zero segment — `0733`→`733`). A YAML schema/format change does
-                  both: the schema bump and the tag. See `/charly-build:migrate`.
+                  both: it ships its `migrations.cue` entry and it gets its tag. See `/charly-build:migrate`.
 
                   **A merged `CHANGELOG/<CalVer>.md` is immutable, exactly like the tag sharing its
                   CalVer.** Once tag-on-merge writes the entry from a PR body at
@@ -7021,8 +7027,8 @@ go-skill:
                      `spec/spec/charly_names.go` (`type BoxConfig = Box`) instead.
                   3. **Regenerate: `charly task cue-gen`** in the spec repo (the base schema's own
                      `kind:task`). It runs `cue exp gengotypes` into `spec/spec/cue_types_gen.go`, the companion
-                     `spec/internal/schemagen` into `spec/spec/vocab_gen.go` + `spec/spec/version_gen.go`,
-                     and the principled yaml-tag retag transform (both over the `spec/schemaconcat`
+                     `spec/internal/schemagen` into `spec/spec/vocab_gen.go`, and the
+                     principled yaml-tag retag transform (both over the `spec/schemaconcat`
                      concatenation). NEVER hand-edit the generated files (they carry the
                      `Code generated … DO NOT EDIT` banner).
                      `TestGenReproducible` (`spec/spec/gen_repro_test.go`) fails if committed ≠ fresh.
@@ -7050,20 +7056,16 @@ go-skill:
                      (reusing the shared defs in `_common.cue`) + a one-line `cue_kind_<kind>.go`
                      `registerCueKind` registration + a corpus-test entry
                      (`cue_kinds_corpus_test.go`).
-                  6. **Schema-version bump ONLY on an authored WIRE-key change.** Only if the
-                     change alters an authored WIRE key (the YAML users write) is it a FORMAT
-                     change: then it is CROSS-REPO — bump `#SchemaVersion` in
-                     `spec/schema/version.cue`, run `charly task cue-gen` (which regenerates the
-                     `SchemaVersion`/`SchemaFloor` consts in `spec/spec/version_gen.go` that
-                     `kit.LatestSchemaVersion()` parses), land + tag the spec repo, then in the
-                     superproject bump the `github.com/opencharly/spec` require version
-                     (charly/go.mod + every lockstep go.mod — the canonical-go.mod gate asserts
-                     one shared pin; `charly task mods-tidy` re-syncs the go.sum files) and append the
-                     matching entry to the
-                     declarative migration table (`candy/plugin-migrate/migrations.cue` — the TABLE lives in
-                     the compiled-in `command:migrate` plugin) per `/charly-build:migrate`. A pure
-                     Go-identifier change via `@go()` is NOT a format change (wire key preserved) —
-                     do NOT bump the schema version.
+                  6. **A schema change ships its migration-table entry.** Only if the change alters an authored
+                     WIRE key (the YAML users write) is it a FORMAT change: then it is CROSS-REPO — land + tag
+                     the spec repo, then in the superproject bump the `github.com/opencharly/spec` require
+                     version (charly/go.mod + every lockstep go.mod — the canonical-go.mod gate asserts one
+                     shared pin; `charly task mods-tidy` re-syncs the go.sum files) and append the matching
+                     entry to the declarative migration table (`candy/plugin-migrate/migrations.cue` — the
+                     TABLE lives in the compiled-in `command:migrate` plugin) per `/charly-build:migrate`.
+                     There is no `#SchemaVersion` / `version:` to bump: the table is an ordered, version-free
+                     list, and each entry is idempotent. A pure Go-identifier change via `@go()` is NOT a
+                     format change (wire key preserved) — no entry is needed.
                   7. **Guards (all must pass):** `cd charly && go test ./...` (reproducibility +
                      bijection + corpus + closedness + embedded-defaults via
                      `TestEmbeddedDefaults_SchemaConformance`) +
@@ -7079,7 +7081,7 @@ go-skill:
               content: |
                   ### Unified YAML loader (`LoadUnified`)
 
-                  The unified format's entry point is `LoadUnified(dir)` (`sdk/loaderkit/load_unified.go`, reached through the ProjectLoader seam from `charly/loader_threaded.go` — the former `charly/unified.go` is DELETED, K-wave 2). It reads `<dir>/charly.yml`, recursively resolves the `import:` statement (max depth 8, cycle-safe via visited set), and parses every file as a **YAML multi-document stream** (so fleet files with `---` separators work). Every document is **unified node-form** (name-first): the loader's per-document merge (`sdk/loaderkit/walk.go`'s `(*walker).walkFile`, the port of the former `mergeUnifiedDocs`) runs each document through the shared routing core — `spec.ClassifyDoc` (top-level-key inspection; `kit.ClassifyDoc` re-exports it) → the closed `#NodeDoc` CUE gate → `normalizeNodeInto` (the reserved-word-driven node decomposer, `charly/node_parsed.go`). **`#NodeDoc` (`schema/node.cue`) is the SOLE load-time gate** for every loaded document, the root `charly.yml` and discovered manifests alike. `spec.ClassifyDoc` does NOT route a legacy kind-keyed / root-shape document — it HARD-REJECTS it with a `charly migrate` hint (the legacy `mergeKindDoc` / `firstKindKey` / `kindKeyedDoc` / `VmDoc` routing was deleted in the `#NodeDoc`-sole-gate cutover; the legacy-shape detector `rootShapeKeySet` is gone too — `ClassifyDoc` now classifies every non-empty top-level mapping as node-form). **F9 BOOTSTRAP PHASE:** before the early `GateSchemaVersion` schema gate, `LoadUnified` runs `runBootstrapPhase(rootData)` (`charly/bootstrap_phase.go`) — it enumerates `providerRegistry.providersInPhase(sdk.PhaseBootstrap)` and invokes each one's `Invoke(OpBootstrap, {config})`, threading the returned (possibly transformed) bytes, so a bootstrap-phase plugin can rewrite the raw root bytes BEFORE validation rejects them. LoadUnified seeds the transformed root into the loader walk (`sdk/loaderkit/walk.go`'s `(*walker).walkFile`) via the `fileOverrides` map (keyed on the root's abs path), so the rewrite reaches the actual PARSE + the post-merge gate — not just the early version gate. Bootstrap plugins are compiled-in (in-proc), so this never re-enters the validated-config load. Today only the no-op `candy/plugin-example-bootstrap` registers in this phase — **migrate is NOT a bootstrap-phase transform** (it is the compiled-in `candy/plugin-migrate` `command:migrate` plugin, invoked explicitly by `charly migrate` and by the refs-seams remote-cache auto-migration Invoke — `sdk/loaderkit/refs_seams_executor.go`'s `migrateCacheViaPeer`, the former `charly/refs.go` is DELETED — never as an in-loader byte-rewrite; the load gate keeps the `Run: charly migrate` reject for a stale config, because migration is whole-project file-based + host-coupled and cannot run on root bytes inside `LoadUnified`). Phases are an `sdk.Phase*` set declared per-capability via `ProvidedCapability.phase` (proto field 9, lifted in `buildUnit`/`buildUnitInProc` onto the `phaseCarrier`; `phaseOfProvider` defaults to runtime). A no-op bootstrap plugin (`candy/plugin-example-bootstrap`) returns the bytes unchanged.
+                  The unified format's entry point is `LoadUnified(dir)` (`sdk/loaderkit/load_unified.go`, reached through the ProjectLoader seam from `charly/loader_threaded.go` — the former `charly/unified.go` is DELETED, K-wave 2). It reads `<dir>/charly.yml`, recursively resolves the `import:` statement (max depth 8, cycle-safe via visited set), and parses every file as a **YAML multi-document stream** (so fleet files with `---` separators work). Every document is **unified node-form** (name-first): the loader's per-document merge (`sdk/loaderkit/walk.go`'s `(*walker).walkFile`, the port of the former `mergeUnifiedDocs`) runs each document through the shared routing core — `spec.ClassifyDoc` (top-level-key inspection; `kit.ClassifyDoc` re-exports it) → the closed `#NodeDoc` CUE gate → `normalizeNodeInto` (the reserved-word-driven node decomposer, `charly/node_parsed.go`). **`#NodeDoc` (`schema/node.cue`) is the SOLE load-time gate** for every loaded document, the root `charly.yml` and discovered manifests alike. `spec.ClassifyDoc` does NOT route a legacy kind-keyed / root-shape document — it HARD-REJECTS it with a `charly migrate` hint (the legacy `mergeKindDoc` / `firstKindKey` / `kindKeyedDoc` / `VmDoc` routing was deleted in the `#NodeDoc`-sole-gate cutover; the legacy-shape detector `rootShapeKeySet` is gone too — `ClassifyDoc` now classifies every non-empty top-level mapping as node-form). **F9 BOOTSTRAP PHASE:** before the closed-schema gate would reject them, `LoadUnified` runs `runBootstrapPhase(rootData)` (`charly/bootstrap_phase.go`) — it enumerates `providerRegistry.providersInPhase(sdk.PhaseBootstrap)` and invokes each one's `Invoke(OpBootstrap, {config})`, threading the returned (possibly transformed) bytes, so a bootstrap-phase plugin can rewrite the raw root bytes BEFORE validation rejects them. LoadUnified seeds the transformed root into the loader walk (`sdk/loaderkit/walk.go`'s `(*walker).walkFile`) via the `fileOverrides` map (keyed on the root's abs path), so the rewrite reaches the actual PARSE and every downstream gate — without it the closed `#NodeDoc` gate rejects the raw bytes. Bootstrap plugins are compiled-in (in-proc), so this never re-enters the validated-config load. Today only the no-op `candy/plugin-example-bootstrap` registers in this phase — **migrate is NOT a bootstrap-phase transform** (it is the compiled-in `candy/plugin-migrate` `command:migrate` plugin, invoked explicitly by `charly migrate` and by the refs-seams remote-cache auto-migration Invoke — `sdk/loaderkit/refs_seams_executor.go`'s `migrateCacheViaPeer`, the former `charly/refs.go` is DELETED — never as an in-loader byte-rewrite; the load gate keeps the `Run: charly migrate` reject for a stale config, because migration is whole-project file-based + host-coupled and cannot run on root bytes inside `LoadUnified`). Phases are an `sdk.Phase*` set declared per-capability via `ProvidedCapability.phase` (proto field 9, lifted in `buildUnit`/`buildUnitInProc` onto the `phaseCarrier`; `phaseOfProvider` defaults to runtime). A no-op bootstrap plugin (`candy/plugin-example-bootstrap`) returns the bytes unchanged.
 
                   `UnifiedFile.ApplyDiscover(rootDir)` walks the **flat generic `discover:` list** after initial merge. `discover:` is `DiscoverConfig` = `[]ScanSpec` (`{path, recursive, manifest}`) — no kind dimension. For each spec, `sdk/loaderkit/discover.go`'s `RunDiscover` (the K1 port of the former `charly/unified.go` discover walk) finds directories containing the spec's `manifest` (default `UnifiedFileName` — `charly.yml`, the ONE filename the code knows; a missing discover path is a no-op, not an error), and validates each discovered document through the SAME `spec.ClassifyDoc` → `#NodeDoc` gate: a `candy:` node registers a lazy `From:` directory reference (`charly.ScanCandy` parses + validates it later), every other node decomposes + merges via `normalizeNodeInto`. Explicit map entries always win over discovered entries. **`ApplyDiscover` runs in the loader's main path (`sdk/loaderkit/walk.go`'s `walkFile` depth-0 boundary, for the root AND every namespace), so discovered image nodes (`candy:` nodes carrying `base:`/`from:`, the former `box:`) reach `ProjectConfig` — not just the layer-loading path.** The authoring kind vocabulary is CUE-derived and registry-driven — `spec.KindWords` (empty today; every kind is plugin-served) feeds the loader's Threaded snapshot (`spec.Threaded.Kinds`) via the provider registry, and the former in-core `kindWordSet`/`stepKeywordSet` membership sets were removed with the kind-externalization; the former hand `kindKeys`/`kindKeysSet`/`entityKind` lists were deleted.
 
@@ -7093,7 +7095,7 @@ go-skill:
 
                   | Source (authored) | Generator | Generated artifact |
                   |---|---|---|
-                  | `spec/schema/*.cue` (the base ingress schema) | `charly task cue-gen` — `cue exp gengotypes` + `spec/internal/schemagen` (concat/retag/vocab/version), both over the shared `spec/schemaconcat` | `spec/spec/cue_types_gen.go`, `spec/spec/vocab_gen.go`, `spec/spec/version_gen.go` |
+                  | `spec/schema/*.cue` (the base ingress schema) | `charly task cue-gen` — `cue exp gengotypes` + `spec/internal/schemagen` (concat/retag/vocab), both over the shared `spec/schemaconcat` | `spec/spec/cue_types_gen.go`, `spec/spec/vocab_gen.go` |
                   | each plugin's own `schema/*.cue` | the SAME `cue exp gengotypes` pipeline (`-pkg=params`), run in the plugin's OWN repo | `candy/plugin-*/params/cue_types_gen.go` |
                   | `charly/charly.yml` `compiled_plugins:` | `pluginsgen` (`charly/internal/pluginsgen`, run by `scripts/bootstrap-charly.sh`) | `charly/plugins_generated.go` + the repo-root `go.work` |
                   | `spec/protocol/schema/*.cue` | `charly task wire-gen` (wiregen + pinned protoc plugins) | `spec/proto/plugin.proto`, `plugin.pb.go`, `plugin_grpc.pb.go` |
@@ -7154,7 +7156,7 @@ go-skill:
                     - `spec/spec/charly_names.go` — **hand-written** charly-name aliases (`type BoxConfig = Box`, `type VmSpec = Vm`, …). Def-level `@go(CharlyName)` is BROKEN in cue v0.16.1 (it dangles the fields that reference the renamed def, producing uncompilable Go — RDD-verified on a live spike), so the charly NAME is exposed as a Go type alias here instead of via a def-level attribute. The per-FIELD `@go(GoName,…)` attributes (which DO work) carry the name/pointer/type overrides in `spec/schema/*.cue`.
                     - `spec/spec/gen_repro_test.go` — `TestGenReproducible`, the **reproducibility gate**: re-runs the same `charly task cue-gen` tools into a temp dir and diffs against the committed `cue_types_gen.go` + `vocab_gen.go`, failing on any drift (skips gracefully when the pinned `cue` CLI is absent).
                     - `spec/spec/scalar_aliases.go`, `spec/spec/hand_state_types.go`, `spec/spec/charly_methods.go` — hand-written supporting scalar aliases, runtime state types, and the pure methods (`Op.Kind()`, …) that moved into package `spec` alongside the types they operate on.
-                  - **`spec/internal/schemagen` (`main.go`) — the companion generator.** Four modes: `-mode=concat` (concatenate `schema/*.cue` into one `schema_spec.cue` compilation unit headed `package spec`), `-mode=vocab` (compile that and emit `spec/spec/vocab_gen.go`), `-mode=version` (emit the `SchemaVersion`/`SchemaFloor` consts → `spec/spec/version_gen.go`), `-mode=retag` (the principled Go yaml-tag transform on the `gengotypes` output → `spec/spec/cue_types_gen.go`). Compiled and documented — never `sed` on generated Go.
+                  - **`spec/internal/schemagen` (`main.go`) — the companion generator.** Three modes: `-mode=concat` (concatenate `schema/*.cue` into one `schema_spec.cue` compilation unit headed `package spec`), `-mode=vocab` (compile that and emit `spec/spec/vocab_gen.go`), `-mode=retag` (the principled Go yaml-tag transform on the `gengotypes` output → `spec/spec/cue_types_gen.go`). Compiled and documented — never `sed` on generated Go.
                   - **`spec/schemaconcat` (`schemaconcat.go`) — the shared PUBLIC concat contract (R3, `github.com/opencharly/spec/schemaconcat`).** The ONE `ConcatSchema` both the RUNTIME (`charly/cue_schema.go`'s `sharedCueSchema`, over the `spec/schema` embed FS) and the dev-time generator call to fold every package-less `schema/*.cue` file into one compilation unit, so the schema the runtime validates against and the Go types `gengotypes` produces can never drift. A leaf package depending only on the stdlib `io/fs` abstraction (runtime passes the `spec/schema` `//go:embed` FS, the generator passes `os.DirFS`).
                   - **The alias surface — ZERO in core (the v2 ZERO-ALIASES target, REACHED; see the project rulebook "Core is a PLUGIN HOST").** Authored param types are referenced FULLY-QUALIFIED as `spec.X` throughout `charly/*.go` (`spec.BoxConfig`, `spec.Op`, `spec.CandyYAML`, `spec.ServiceEntry`, …) — package main defines NO re-export alias for them, and the hand struct DEFINITIONS are gone. No `charly/*_aliases.go` file exists at all: `TestZeroAliases_NoAliasFilesInCharlyCore` (`charly/import_purity_test.go`) globs `*_aliases.go` / `*_alias.go` in `charly/` and FAILS on any reappearance, and its sibling alias-FORM assertion in the same file policies inline `X = spec.Y` re-exports. An alias means the call site is MISLOCATED — the fix is moving that call site into its owning plugin, never re-exporting the type. The alias files this skill once inventoried live in their owning plugin / kit packages now (`candy/plugin-vm/vmshared_aliases.go`, `sdk/deploykit/kit_aliases.go`, …); **their membership still changes, so grep the actual file before citing which one binds a given symbol — never cite this skill for it.** Because every core reference is a direct `spec.X` compiling against the real spec types, **the Go compiler IS the field-parity check**: a renamed or removed spec field (or wire-key/type change) fails the build at this surface. The former package-main name-collision carve-outs are gone with the types themselves — core holds no concrete `Candy` struct (`charly/layers.go`), no `CandyRef`, and no in-core `CalVer` (`charly/version.go` records its W0 deletion). The authored-config type is `spec.CandyYAML`, itself an intra-`spec`-package alias to `Candy` at `spec/spec/charly_names.go` — a STABLE spec-side fact, not a charly-core alias; `CandyRef` is `sdk/deploykit`'s own alias to `spec.CandyRefEntry`.
                   - **`charly/reserved_registry.go` (package main) — the CUE-derived reserved-word membership sets + the startup VERB bijection gate.** Hosts the remaining CUE-derived membership sets: `resourceKindSet` + `authoredOpFieldSet` (each a set view of a `spec.*` slice regenerated by `charly task cue-gen`; no hand-maintained parallel list). The former `kindWordSet`/`stepKeywordSet` were removed with the kind-externalization (classifyKind reads the registry's Threaded snapshot), and `docDirectiveSet` moved to loaderkit. `VerbCatalog` dispatches the generic install verbs; `normalizeNodeInto` (the reserved-word-driven node decomposer) also lives here. The `init()` runs the VERB **bijection** check fail-fast at process start (mirrored as `TestReservedWordRegistry_*`): `checkVerbBijection(VerbCatalog, spec.OpVerbs, spec.AuthoringVerbs)` — a verb can never be added to the schema without a handler, nor a handler kept after its word is dropped. The KIND bijection is `checkKindProviderBijection(spec.KindWords)` in `charly/provider_kind.go` (panics from `registry_bootstrap.go`): it gates ClassKind PROVIDERS against `spec.KindWords`, which is now EMPTY — every authoring kind is plugin-served, so there is no in-core `reservedKindHandlers` map (a kind is decoded by its provider via `runPluginKind`, not a core handler).
@@ -8743,7 +8745,6 @@ plugin-skill:
             ```yaml
             my-plugin:
               candy:
-                version: 2026.180.1200          # mandatory CalVer (any candy)
                 description: |-                 # mandatory (ADE)
                   What this plugin provides.
                 plugin:
@@ -8759,7 +8760,7 @@ plugin-skill:
             ```
 
             A candy with no `plugin:` block is an ordinary candy; one WITH it is a plugin. Full candy authoring surface
-            applies (`/charly-image:layer`), including the mandatory `version:`/`description:`/`plan:`+`check:` (ADE).
+            applies (`/charly-image:layer`), including the mandatory `description:` and `plan:`+`check:` (ADE).
 
             ## Placement — EXTERNAL by default for new plugins
 
