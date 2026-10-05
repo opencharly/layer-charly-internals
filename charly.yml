@@ -5594,26 +5594,24 @@ git-workflow-skill:
 
                   ### The umbrella task surface (each a `kind: task` in the root charly.yml)
 
-                  Build the binary once per clone with `./charly/scripts/bootstrap-charly.sh` (the
-                  ONE non-charly entrypoint — the build that produces the binary cannot itself be
-                  a charly task), then run from the umbrella root. `./charly/bin/charly task list`
-                  enumerates them; the umbrella README's "Maintenance commands" table is the
-                  user-facing copy.
+                  These are maintenance the umbrella project performs on itself, run from the
+                  umbrella root; `charly task list` enumerates them, and the umbrella README's
+                  "Maintenance commands" table is the user-facing copy.
 
                   | command | purpose |
                   |---|---|
-                  | `./charly/bin/charly task map` | list every submodule with its pin and sync state |
-                  | `./charly/bin/charly task sync` | bump pins per Policy B (preview only; does not commit or open a PR) |
-                  | `./charly/bin/charly task hooks` | install `hooks/pre-commit` for this clone (once; sets `core.hooksPath hooks`) |
-                  | `./charly/bin/charly task verify` | the FULL pinning audit on demand — there is **no CI gate**; this IS the gate. Run it on the final tree and paste the output (R7: a green `git status` proves nothing) |
-                  | `./charly/bin/charly task org-map` | verify the README org-map tables against `.gitmodules` |
-                  | `./charly/bin/charly task skills` | `scripts/sync-dispatcher.sh`: splice the generated R0 dispatcher into `AGENTS.md` (no-op while the table is hand-curated outside the markers) |
-                  | `./charly/bin/charly task policy-b` | assert Policy B — every `distro-*` gitlink equals charly's own `box/*` gitlink |
-                  | `./charly/bin/charly task pins` | the Policy-B pin operation over the `distro-*` set (mode via param) |
-                  | `./charly/bin/charly task self-test` | self-test the committed CI body/pin-evidence builders + the dispatcher splice |
-                  | `./charly/bin/charly task omarchy-agents` | gate the committed omarchy PR-eval pi agents (tracked + parseable) |
-                  | `./charly/bin/charly task pi-forks` | sync the opencharly pi-plugin forks from their upstreams (requires `gh` auth) |
-                  | `./charly/bin/charly task prune` | reap merged-upstream session worktrees + branches (`MODE=report` is a dry run) |
+                  | `charly task map` | list every submodule with its pin and sync state |
+                  | `charly task sync` | bump pins per Policy B (preview only; does not commit or open a PR) |
+                  | `charly task hooks` | install `hooks/pre-commit` for this clone (once; sets `core.hooksPath hooks`) |
+                  | `charly task verify` | the FULL pinning audit on demand — there is **no CI gate**; this IS the gate. Run it on the final tree and paste the output (R7: a green `git status` proves nothing) |
+                  | `charly task org-map` | verify the README org-map tables against `.gitmodules` |
+                  | `charly task skills` | `scripts/sync-dispatcher.sh`: splice the generated R0 dispatcher into `AGENTS.md` (no-op while the table is hand-curated outside the markers) |
+                  | `charly task policy-b` | assert Policy B — every `distro-*` gitlink equals charly's own `box/*` gitlink |
+                  | `charly task pins` | the Policy-B pin operation over the `distro-*` set (mode via param) |
+                  | `charly task self-test` | self-test the committed CI body/pin-evidence builders + the dispatcher splice |
+                  | `charly task omarchy-agents` | gate the committed omarchy PR-eval pi agents (tracked + parseable) |
+                  | `charly task pi-forks` | sync the opencharly pi-plugin forks from their upstreams (requires `gh` auth) |
+                  | `charly task prune` | reap merged-upstream session worktrees + branches (`MODE=report` is a dry run) |
 
                   ### Policy B (the pinning contract)
 
