@@ -217,7 +217,7 @@ agents-skill:
                   | Fresh validator / teammate | sub-agent or team teammate with the agent brief | fresh agent thread with the role toml | a fresh separate `kimi` session (interactive or `kimi -p`) briefed with the agent `.md` by path — context isolation is what makes it independent |
                   | Dynamic workflows | `.claude/workflows/*.js` (run `/<name>`) | re-derived per thread | re-derived per session (no workflow runtime) |
                   | Teams | `~/.claude/teams/` (experimental) | concurrent fresh threads | concurrent fresh sessions |
-                  | Gates | `permissions.allow` + the auto-mode classifier (`.claude/settings.json` wires NO hooks — the gate scripts in `.claude/hooks/` are invoked by the other harnesses, not by Claude Code) | sandbox + on-request approvals (`.codex/config.toml`) | hooks + `[[permission.rules]]` in user-level `~/.kimi-code/config.toml` (no project-level config; repo-guarded delegation to `.claude/hooks/`) — no auto-mode classifier |
+                  | Gates | `permissions.allow` + the auto-mode classifier + `PreToolUse(Bash)` hooks (`.claude/settings.json` wires pre-commit-gate.sh + pre-push-gate.sh, since umbrella `5e485a8`) | sandbox + on-request approvals (`.codex/config.toml`) | hooks + `[[permission.rules]]` in user-level `~/.kimi-code/config.toml` (no project-level config; repo-guarded delegation to `.claude/hooks/`) — no auto-mode classifier |
                   | Hook events | UserPromptSubmit / PreToolUse / Stop / TaskCreated / TaskCompleted / TeammateIdle | — (approvals instead) | UserPromptSubmit / PreToolUse / Stop / SubagentStart / SubagentStop |
 
                   **Harness-agnostic invariants:** the agent briefs in the marketplace's
@@ -6940,12 +6940,12 @@ go-skill:
 
             - `.claude/hooks/pre-commit-gate.sh` (the staged-Go-lint discipline backstop) redirects
               its own lint temp dirs to `~/.cache/charly-gate-lint/` and creates the TMPDIR/GOTMPDIR
-              subdirs, so it is unaffected by the cap wherever it runs. Note it is NOT wired in
-              Claude Code — `.claude/settings.json` wires no `PreToolUse` hooks, so under Claude
-              Code the script fires on nothing and nothing runs it automatically. It stays live in
-              the other harnesses that invoke it (`.reasonix/settings.json`, and `~/.kimi-code/config.toml`
-              which delegates to `.claude/hooks/`). Running Go work under Claude Code, apply the two
-              bullets above yourself.
+              subdirs, so it is unaffected by the cap wherever it runs. It is wired as a
+              `PreToolUse(Bash)` hook in every harness that roots here — `.claude/settings.json`
+              (Claude Code, since umbrella `5e485a8`), `.reasonix/settings.json`, and
+              `~/.kimi-code/config.toml` which delegates to `.claude/hooks/` — so under Claude Code
+              the staged-Go-lint smoke runs automatically at commit time (the two bullets above
+              still apply for anything the hook does not cover).
             - **Cumulative /tmp usage cap — the Bash tool's output capture dies.** Beyond the
               per-command cap, the sandbox also caps TOTAL /tmp usage (observed at ~80% of the
               tmpfs). When /tmp fills to that point, the Bash tool's output capture fails: every
