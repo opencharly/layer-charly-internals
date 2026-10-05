@@ -115,11 +115,25 @@ agents-skill:
             `pod-*`/`plugin-*` repo, or `charly/` — carries a copy, and there is **no parity
             gate**: the former `charly task harness` (which compared umbrella↔`charly/`
             byte-identical files) is DELETED. Sessions root at the umbrella (umbrella
-            `AGENTS.md` rule 4), and harness config resolves from the SESSION'S project root, so
+            `AGENTS.md`, "Sessions root at the umbrella"), and harness config resolves from the SESSION'S project root, so
             config anywhere else would bind a situation that cannot legally occur — **one root,
             one config home**. A rulebook (`AGENTS.md`) is NOT harness config and stays in its
             own repo. The clone-level git hook is installed per clone with `charly task hooks`.
             This skill documents the mechanism; the rulebooks stay harness-neutral.
+
+            **The harness-config gate.** `scripts/check-harness-config.mjs` (umbrella root) audits
+            the harness-config surfaces themselves: each still parses and stays wired (the
+            PreToolUse hooks block, the plugin set, the permission arms, the DeepWiki MCP entry,
+            the SOUL.md injection), and `--self-test` mutates each surface to prove every check
+            can fail. Like the clone-level hook it guards MECHANICS only; attribution, change
+            class, and rulebook compliance are judged once by the fresh `pr-validator` at merge.
+
+            **DeepWiki (architecture questions).** Every harness declares the `deepwiki` remote
+            MCP server (`https://mcp.deepwiki.com/mcp`: `.mcp.json`, `opencode.json`,
+            `.codex/config.toml`). Where a grep cannot answer *how* a repo is put together, ask
+            it (`read_wiki_structure`, `read_wiki_contents`, `ask_wiki_question`) about the
+            repo's GitHub name instead of guessing — and treat the answer as a pointer to read,
+            never as truth: when the wiki and the code disagree, the code wins.
 
             ## A plugin resolves DIFFERENT PIECES FROM DIFFERENT REFS — verify the pin its BACKEND resolves from (R1 2026-09-29)
 
@@ -192,7 +206,7 @@ agents-skill:
               operation, ensure the ledger reflects it, so a later interruption resumes
               from STATE, not memory.
 
-            The umbrella rulebook states this as rule 11 (`AGENTS.md`, "Todo ledger &
+            The umbrella rulebook states this as a Part II rule (`AGENTS.md`, "Ledger and
             interruption safety") and points here for the detail. Where this guidance
             itself belongs is owned by the sibling `/charly-internals:skills` ("Where
             guidance belongs"): mandate in `AGENTS.md`, detail in the skill.
@@ -3966,9 +3980,9 @@ git-workflow-skill:
             ("Umbrella-native mechanics are the sanctioned path for umbrella work"). A charly
             end-user never sees them; they are the umbrella's own `charly task` entities.
 
-            Inside the umbrella checkout the umbrella `AGENTS.md` governs (rule 7: read the
-            subrepo's own rulebook before touching it; `charly/AGENTS.md` owns R0–R10 inside
-            `charly/`). The umbrella's own commands — never an ad-hoc substitute — are:
+            Inside the umbrella checkout the umbrella `AGENTS.md` governs (Part I is the org-wide
+            rulebook; a subrepo's own `AGENTS.md` — e.g. `charly/AGENTS.md` for the charly
+            core — adds repo-specific rules on top). The umbrella's own commands — never an ad-hoc substitute — are:
             `charly task sync` (policy-B pin bump), `charly task verify` (the full pinning gate — there is
             NO CI gate), `charly task hooks` (install the per-commit gate),
             `charly task map`. Hard rules there: **never edit inside a submodule** (change
@@ -3986,7 +4000,7 @@ git-workflow-skill:
             | B2 (multi-repo/multi-worktree coordination, per-module verification), **B2b (cross-session coordination via PR comments when another session's PR blocks you; the two-line identity footer + the CLAIM/OWNING/HANDING OVER/TAKING OVER/BLOCKS/UNBLOCKS/STATUS/RESOLVED verb grammar, mandatory on a contended or blocking scope)**, B3 (agent teams in per-teammate worktrees), B6 (cross-repo `@github` landing), and B7 (multi-worktree landing + refresh, the canonical end-to-end) | `references/multi-repo-coordination.md` |
             | B5 (the fresh evaluator + fork/PR path, the two-gate autonomous-landing model), CalVer generation, post-landing cleanliness + report format, and the validation-FAILS recovery sequence | `references/validator-and-calver.md` |
             | Evidence discipline — provenance vs plausibility of a pasted gate, the three freshness surfaces (head / body / pasted output), positive-vs-negative claim decay, sweeping for claims a fix invalidated, the merged-tree gate for a `BEHIND` PR, source-and-regeneration as one cross-repo cutover, submodule pointers reverted by a non-conflicting merge, and why status-absence on a known head proves nothing | `references/evidence-and-freshness.md` |
-            | Umbrella mechanics — the ~400-submodule view, policy B, `charly task sync`/`verify`/`hooks`/`harness`, the no-edit-in-submodule rule, pin discipline | `references/umbrella-mechanics.md` |
+            | Umbrella mechanics — the ~400-submodule view, Policy B, the full `charly task` maintenance table, session worktrees, the no-edit-in-submodule rule, pin discipline | `references/umbrella-mechanics.md` |
             | Watch-and-wake — the self-sustaining watcher family (`--auto-rearm`, the single-instance lock, rate-limit backoff) and the arm → wake → act → re-arm runbook | `marketplace/scripts/pr_state_watch.sh`, `marketplace/scripts/pr_watch_many.sh`, `marketplace/scripts/gh_watch.sh` (run one — never hand-roll a poll) + `references/watch-and-wake.md` |
             | The pre-validator self-audit — the six BLOCK classes detectable before the first push, the nine-step preflight that removes them, and the delegating-parent duties | `references/pre-validator-self-audit.md` |
 
@@ -4586,7 +4600,7 @@ git-workflow-skill:
 
                   ## B2b — cross-session coordination: the PR comment is the channel
 
-                  Sessions are independent and OWN their artifacts (umbrella rule 9): a branch,
+                  Sessions are independent and OWN their artifacts (umbrella `AGENTS.md`, "Session-scoped ownership"): a branch,
                   worktree, file, or PR you did not create is another session's, and you never
                   edit, revert, reformat, stage, or commit it — not even to "clean up" or unblock
                   yourself.
@@ -5177,6 +5191,23 @@ git-workflow-skill:
                   The PR path is the sole landing path for everyone — write-access holders and
                   outside contributors alike. There is no direct-merge fast path.
 
+                  **The post-execution sequence** (the rulebook's "Landing and proof" mandate, in order):
+
+                  1. After the final gate, recheck the complete diff, manifest, gitlinks, changelogs,
+                     attribution, worktree state, and retained evidence.
+                  2. Commit on a `feat/` branch at the confidence the proof supports, push without
+                     force, and open ONE PR with a structured body supplied by `--body-file`.
+                  3. A fresh, independent `pr-validator` reloads protected policy, binds the exact base
+                     and head, personally runs the derived gate, and posts its durable verdict before
+                     any gated action.
+                  4. Only PASS posts `charly/pr-validator`, arms native auto-merge (squash) on the bound
+                     head, and lets `tag-on-merge` mint the merge-time CalVer tag; branch and worktree
+                     cleanup follow (orchestrator-owned in the orchestrator+teammates model, the owning
+                     session's own otherwise). A changed head, a warning, an anomaly, or a live
+                     unfinished bed revokes PASS.
+                  5. After `main` advances, update every interacting PR (`gh pr update-branch`) and run
+                     a risk-proportional delta gate; never guess across divergent submodule lineage.
+
                   ### Validator handoff is parent-owned and complete
 
                   **Before spawning every fresh `pr-validator` round, the parent/orchestrator supplies a
@@ -5555,32 +5586,46 @@ git-workflow-skill:
                   ## Umbrella mechanics (the ~400-submodule view)
 
                   When the work happens in the umbrella checkout itself — pin bumps, gitlinks,
-                  the aggregate view — the umbrella `AGENTS.md` is the governing rulebook.
-                  Rule 7: read the SUBREPO's own rulebook before touching it; `charly/AGENTS.md`
-                  owns R0–R10 inside `charly/`. The umbrella's own commands are the sanctioned
+                  the aggregate view — the umbrella `AGENTS.md` governs: Part I is the org-wide
+                  rulebook, Part II the umbrella rules. A subrepo's own `AGENTS.md` adds
+                  repo-specific rules on top (read it before touching that repo; `charly/AGENTS.md`
+                  carries the charly-core rules). The umbrella's own commands are the sanctioned
                   path for umbrella work, never an ad-hoc substitute.
 
                   ### The umbrella task surface (each a `kind: task` in the root charly.yml)
 
-                  - **`charly task sync`**: bump every submodule pin per policy B (preview only —
-                    it does not commit or open a PR).
-                  - **`charly task verify`**: the FULL pinning gate on demand — every pin, including
-                    the remote branch audit. There is **no CI
-                    gate** for this; `charly task verify` IS the gate. Run it on the final tree and
-                    paste the output (R7: a green `git status` proves nothing).
-                  - **`charly task hooks`**: install the per-commit gate once per clone (sets
-                    `core.hooksPath hooks`); policy B then runs on every commit.
-                  - **`charly task map`**: list every submodule with its pin and sync state.
-                  - **`charly task skills`** → `scripts/sync-dispatcher.sh`: splice the generated R0
-                    dispatcher from the pinned marketplace into `AGENTS.md`.
+                  Build the binary once per clone with `./charly/scripts/bootstrap-charly.sh` (the
+                  ONE non-charly entrypoint — the build that produces the binary cannot itself be
+                  a charly task), then run from the umbrella root. `./charly/bin/charly task list`
+                  enumerates them; the umbrella README's "Maintenance commands" table is the
+                  user-facing copy.
+
+                  | command | purpose |
+                  |---|---|
+                  | `./charly/bin/charly task map` | list every submodule with its pin and sync state |
+                  | `./charly/bin/charly task sync` | bump pins per Policy B (preview only; does not commit or open a PR) |
+                  | `./charly/bin/charly task hooks` | install `hooks/pre-commit` for this clone (once; sets `core.hooksPath hooks`) |
+                  | `./charly/bin/charly task verify` | the FULL pinning audit on demand — there is **no CI gate**; this IS the gate. Run it on the final tree and paste the output (R7: a green `git status` proves nothing) |
+                  | `./charly/bin/charly task org-map` | verify the README org-map tables against `.gitmodules` |
+                  | `./charly/bin/charly task skills` | `scripts/sync-dispatcher.sh`: splice the generated R0 dispatcher into `AGENTS.md` (no-op while the table is hand-curated outside the markers) |
+                  | `./charly/bin/charly task policy-b` | assert Policy B — every `distro-*` gitlink equals charly's own `box/*` gitlink |
+                  | `./charly/bin/charly task pins` | the Policy-B pin operation over the `distro-*` set (mode via param) |
+                  | `./charly/bin/charly task self-test` | self-test the committed CI body/pin-evidence builders + the dispatcher splice |
+                  | `./charly/bin/charly task omarchy-agents` | gate the committed omarchy PR-eval pi agents (tracked + parseable) |
+                  | `./charly/bin/charly task pi-forks` | sync the opencharly pi-plugin forks from their upstreams (requires `gh` auth) |
+                  | `./charly/bin/charly task prune` | reap merged-upstream session worktrees + branches (`MODE=report` is a dry run) |
 
                   ### Policy B (the pinning contract)
 
-                  `distro-*` must equal charly's OWN gitlinks. `sdk` and `spec` are NOT
-                  charly-pinned submodules — they resolve from the Go proxy at pinned `go.mod`
-                  requires (their de-submodule cutovers). `marketplace` and `docs` are submodules
-                  pinned to their own default-branch HEAD, like every other non-pinned repo. If
-                  charly's pinning changed, the fix is `charly task sync` + a PR — never a hand-pin.
+                  The umbrella records a commit per submodule and checks it out DETACHED and clean —
+                  exactly what `charly task verify` asserts. `distro-*` must equal charly's OWN
+                  gitlinks. `sdk` and `spec` are recorded as gitlinks too, but charly no longer pins
+                  them — its builds resolve them from the Go proxy at pinned `go.mod` requires.
+                  `marketplace`, `docs`, and every `plugin-*` repo are recorded at their own
+                  default-branch HEAD. Pin only MERGED refs (default branches or gitlinks charly
+                  records), never a PR branch; a dangling pin is a failure. If pinning changed, the
+                  fix is `charly task sync` + a PR — never a hand-pin or a branch checkout to
+                  "catch up".
 
                   ### Umbrella rules that change how you commit here
 
@@ -5590,15 +5635,15 @@ git-workflow-skill:
                     `spec`, `plugin-vm`, `plugin-migrate` each on its OWN branch + PR; the
                     umbrella's gitlinks are bumped afterwards by `charly task sync`.
                   - **Run submodule git through `git -C <absolute-path>` from the umbrella
-                    root** (rule 2). Never root a worker in a submodule, never `git add -A` from
-                    one, and never assume a submodule moved after an umbrella `git pull`.
-                  - **No worktrees inside submodules** (rule 4). The per-session linked-worktree
-                    pattern belongs to the `charly` checkout, not here.
-                  - **Pin discipline:** pin only MERGED refs (default branches or gitlinks
-                    charly records); never a PR branch. `charly task verify` treats a dangling pin as a
-                    failure.
-                  - **No nested `go.work`** (rule 3): `charly/` carries its own; the umbrella
-                    root must have none. All Go builds happen inside `charly/`.
+                    root.** Never root a worker in a submodule, never `git add -A` from one, and
+                    never assume a submodule moved after an umbrella `git pull`.
+                  - **Edit in a session worktree, never in the tracked checkout.** Each repo a
+                    session edits gets its own linked worktree at
+                    `<umbrella>/.worktrees/<slug>/<repo>/`, branched off fresh `origin/main`; the
+                    tracked submodule checkout stays at its gitlink, so `verify` keeps passing
+                    (B8 covers removal after merge).
+                  - **No nested `go.work`:** `charly/` carries its own; the umbrella root must have
+                    none. All Go builds happen inside `charly/`.
                   - **Command hygiene (umbrella-scale):** SIGPIPE is ignored here, so an
                     unbounded `grep … | head` floods the output with `Broken pipe` lines. Bound
                     every command — `grep -m N`, or redirect to a file and read it bounded.
@@ -5608,7 +5653,7 @@ git-workflow-skill:
                   A consumer that pins a producer's artifact (`@github` candy ref, a `spec`/`sdk`
                   require, a submodule gitlink) lands AFTER the producer merges + tags. Producer
                   PR → merge → tag → consumer pin bump. The umbrella's gitlink bump is the last
-                  hop, via `charly task sync`. Never bump a consumer to a PR branch (rule 5).
+                  hop, via `charly task sync`. Never bump a consumer to a PR branch.
             - name: evidence-and-freshness
               content: |+
                   ## Evidence discipline — what a claim in a PR is worth
@@ -9654,10 +9699,23 @@ skills-skill:
 
             ## Skill Dispatchers
 
-            `AGENTS.md` is the single, complete, harness-neutral rulebook: every
-            harness reads it directly, and the trigger → skill dispatcher lives there.
+            The umbrella `AGENTS.md` is the single, harness-neutral rulebook: every
+            harness reads it directly, and the trigger → skill dispatcher lives in its
+            Part I ("R0. Skills first"). A subrepo's `AGENTS.md` carries only that repo's
+            extra rows (e.g. `charly/AGENTS.md`'s "R0 for the core"), never a copy.
             When multiple triggers apply, load all matching skills before acting.
             Full index: `marketplace/README.md`.
+
+            **How the umbrella table is maintained.** It is a HAND-CURATED, compact subset
+            of the generated dispatcher (`marketplace/DISPATCHER.md`, emitted by
+            `charly marketplace generate` from each skill entity's `triggers:` — one row per
+            trigger; that file is the authority for the full set). Compact means ONE row per
+            trigger with every skill it selects in one cell, never one row per skill. Being
+            prose, the table lives OUTSIDE the `BEGIN/END GENERATED SKILL DISPATCHER`
+            markers, so `charly task skills` (`scripts/sync-dispatcher.sh`) is a no-op until a
+            consumer adds the markers; then it splices the full generated fragment in place.
+            To add, rename, or remove a skill, update the row in the same PR and keep every
+            ref resolving to `marketplace/<family>/skills/<skill>/SKILL.md`.
 
             ## The corpus must actually LOAD — audit delivery, not just content
 
@@ -9891,7 +9949,7 @@ skills-skill:
             | Image composition, deployment, verification | per-pod plugin or `/charly-distros:<name>` / `/charly-infrastructure:<name>` for base images |
             | Skill disambiguation (which skill to use) | the active harness root rulebook's R0 Skill Dispatcher |
             | Detailed operational patterns | Relevant `/charly-core:*` / `/charly-build:*` / `/charly-check:*` / `/charly-automation:*` / kind-plugin skill |
-            | Hard rule / gate / mandate (the WHAT and the MUST) | each harness root rulebook, with equivalent policy and an owning-skill pointer |
+            | Hard rule / gate / mandate (the WHAT and the MUST) | the umbrella `AGENTS.md` when org-wide, a subrepo's `AGENTS.md` when specific to that repo — stated ONCE, with an owning-skill pointer |
             | Operationalization / matrix / catalog / worked example (the HOW) | The ONE owning skill (see the Authoritative-copy registry below) |
             | Version history / past changes / renames / cutover narration | the repo's `CHANGELOG/` (per-CalVer `<YYYY.DDD.HHMM>.md`) — never the project rulebook or a skill |
             | Long-term thesis / vision / aspiration ("why & where it's going") | `VISION.md` (repo root) — never restating command usage, architecture, or history |
@@ -9930,7 +9988,7 @@ skills-skill:
               harness or a harness-specific file. Harness mechanics live in the per-harness
               config or skill.
 
-            The umbrella rulebook's rule 11 ("Todo ledger & interruption safety") is a
+            The umbrella rulebook's "Ledger and interruption safety" rule is a
             worked example of the split: the rulebook states the MUST and names the owning
             skill, and the sibling `/charly-internals:agents` owns the ledger procedure
             (see `/charly-internals:agents`, "Todo ledger & interruption safety").
@@ -9961,7 +10019,7 @@ skills-skill:
             | Landing mechanics (branch loop, the two-step PR + `pr-validator` merge/tag, CalVer-generated-at-merge, branch protection, multi-repo order) | `/charly-internals:git-workflow` |
             | Agent/workflow/team primitives, hooks doctrine | `/charly-internals:agents` |
             | Kernel/plugin doctrine (core = kernel; every capability a plugin candy), the two authoring shapes, placement, the three-lane transport doctrine, the seams catalog, **the kernel/plugin boundary law** (E/M/B/D/R) + the incomplete-seam mandate | `/charly-internals:plugin` |
-            | Skill Dispatcher, RDD/ADE/SDD mandates, acceptance checklist, attribution tiers, Documentation-only change class anchor, Key Rules index | harness root rulebook (`AGENTS.md`) |
+            | Skill Dispatcher, RDD/ADE/SDD mandates, R1–R10, acceptance checklist, attribution tiers, Documentation-only change class anchor, Key Rules index | the umbrella `AGENTS.md`, Part I (`charly/AGENTS.md` carries only the charly-core rules: core dispatcher rows, the kernel/plugin boundary law, the core SDD pipeline, R9 + the core Go gate) |
 
             A registry owner may hold its canonical text in a `references/<file>.md` split file rather than the top-level `SKILL.md` body (see "Progressive disclosure" above) — the row still names the SKILL as sole owner regardless of which file inside it carries the detail.
 
@@ -9976,8 +10034,10 @@ skills-skill:
             - the 2 hooks in `.claude/hooks/` (`pre-commit-gate.sh`, `pre-push-gate.sh` — deterministic
               command-mechanics gates only; there is no reminder-hook layer),
             - the agents in `marketplace/internals/agents/*.md`,
-            - the 9 per-directory signpost `AGENTS.md` files (`charly/`, `candy/`,
-              `marketplace/`, `docs/`, each `box/<distro>`),
+            - `charly/AGENTS.md` (the charly-core rules; it points at the umbrella `AGENTS.md`
+              for every org-wide section and must never restate one),
+            - the per-directory signpost `AGENTS.md` files (`candy/`, `marketplace/`, `docs/`,
+              each `box/<distro>`),
             - the workflows in `.claude/workflows/*.js`,
             - every SKILL.md that quotes a section name (grep before assuming).
 
