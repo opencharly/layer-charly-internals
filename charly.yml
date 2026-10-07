@@ -3005,7 +3005,17 @@ egress-skill:
               `@go()`-annotated `spec/schema/*.cue` GENERATE the `spec/spec` param structs via
               `charly task cue-gen` (`cue exp gengotypes`, run in the spec repo — the spec module is
               consumed from the module proxy at the pinned require version; each plugin's own
-              `params` package is generated in ITS repo via the same pipeline), kept honest by the reproducibility + parity tests. Owned by `/charly-build:validate`; the schema-change codegen
+              `params` package is generated in ITS repo by the same pipeline, whose exact steps are:
+              concatenate the plugin's `schema/*.cue` under a `package params` + `@go(params)` header
+              (`internal/schemagen -mode=concat -pkg=params` from a spec checkout, run AGAINST the
+              plugin's schema), run `cue exp gengotypes`, then `-mode=retag` to double the json struct
+              tags with yaml tags — the procedure `plugin-pipeline` and `plugin-lobster` gate in their
+              own `ci.yml`. Trap: a regeneration check must compare the pipeline's OUTPUT with the
+              committed file, never grep the committed file for a retired string — the generated file
+              reproduces this file's LEADING doc comment, so it can carry the pipeline's own prose
+              while containing no retired identifier at all. INTERIM, stated as such: a `charly`-native
+              verb that regenerates a plugin's `params` is owed (R4a), so that no PUBLISHED page tells
+              a reader to run checkout-relative, non-`charly` tooling), kept honest by the reproducibility + parity tests. Owned by `/charly-build:validate`; the schema-change codegen
               recipe is `/charly-internals:go` "Updating Go code when an ingress CUE schema
               changes".
             - **Egress** (`candy/plugin-fleet/egress.go`, this skill): validates the OUTPUT config charly
