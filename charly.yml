@@ -10918,7 +10918,7 @@ repo-setup-skill:
                canonical example, `layer-openclaw` follows it). A family is never a bare name.
 
             The full class → name → "may hold" mapping is the umbrella `README.md`
-            ("The org map"), verified by `./charly/bin/charly task org-map`; the rule itself
+            ("The org map"), verified by `charly task org-map`; the rule itself
             is in the umbrella `AGENTS.md` ("Repo classes and naming"). Do not copy either
             table into this skill: they are the canonical surfaces, and a copy drifts.
 
