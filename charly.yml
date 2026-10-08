@@ -2051,10 +2051,14 @@ agents-skill:
 
                   - Arm the org's own watcher as a **background job**: the harness
                     notifies the session when a background command finishes, so the
-                    watcher's exit IS the wake —
-                    `marketplace/scripts/gh_watch.sh --events
-                    verdict,merged,closed,stall --auto-rearm <items…>` (events:
-                    `merged`, `closed`, `stall`, `verdict`, `comment`; see `--help`).
+                    watcher's exit IS the wake. Its events are `merged`, `closed`,
+                    `stall`, `verdict` and `comment`; a DELTA fire arms its own successor,
+                    a STATE fire is terminal. **The watcher is not yet reachable from the
+                    `charly` binary alone** — today it lives in the org's marketplace
+                    checkout, so naming that path here would prescribe a checkout-relative
+                    recipe, which B9/R4a forbid. The portable `charly` command it needs is
+                    filed as `opencharly/charly#837`; document whichever form that row
+                    lands.
                   - **One watcher per scope.** A DELTA fire (`verdict`/`comment`) arms its
                     own successor; a STATE fire (`merged`/`closed`/`stall`) is terminal and
                     must not be re-armed. Re-arm the *harness job* to keep receiving
