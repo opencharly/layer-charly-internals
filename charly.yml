@@ -4012,7 +4012,8 @@ git-workflow-skill:
               - **(c) Fix EVERY finding.** Every validator block and every reviewer finding is fixed in the new head, or rebutted in-thread with evidence. Never fix a subset, and never file a finding raised ON the PR away as an issue.
               - **(d) RCA every validation failure.** A BLOCK, an `INCONCLUSIVE`, a red CI check, or an auto-close is an R1 anomaly. Run a fresh `/charly-internals:root-cause-analyzer` pass BEFORE the fix, and name the **missed control**: why your own pre-push gate did not catch it. Put the root fix into that control (your self-audit, a gate, a skill) as well as into the code. Post the RCA summary in the round's PR comment. An `INCONCLUSIVE` has no code finding: classify its engine or provider cause from the diagnostics and escalate it (see "The INCONCLUSIVE class" above).
               - **(e) Answer coordination first.** A `BLOCKS`, a `TAKING OVER`, or a question addressed to your slug is answered in-thread before your push (B2b.1).
-              - **(f) Write the WHOLE updated body** for the head you are about to publish (footer last), then push ONE new commit carrying every fix of the round.
+              - **(f) Everything the verdict asks for is in place BEFORE the push or re-run.** That includes a requested T4 sign-off comment (B2b.1, "How and when a sign-off is made") and every PR-body change. Make all of them first, then push or re-run exactly once. One BLOCK that requests a T4 sign-off is expected. A second run with the sign-off or a body fix still missing is a violation.
+              - **(g) Write the WHOLE updated body** for the head you are about to publish (footer last), then push ONE new commit carrying every fix of the round.
 
               A push that skips any step is an R1 violation. A partial fix set or a skipped RCA is one too. The validator re-reviews the diff + body + the FULL live thread on every run, so pushing with a stale read OR a stale body re-reviews the wrong state and can re-ship a defect an existing comment already named. A hook/classifier block is never reshaped-and-retried (B5).
             - **Assert the body edit LANDED, then read the LIVE body back — a silently-failed edit is the same defect as a stale body.** A PR body is rewritten by script far more often than by hand, and its failure mode is silent: `str.replace`/`sed` whose anchor stopped matching (a renamed heading, a reflowed line, a re-quoted string) returns the input UNCHANGED and exits 0, so the script reports success while the prose keeps describing an edit the artefact never received — and the next verdict blocks on evidence attributed to a head or a symbol that is not there. Do BOTH whenever a body is rewritten by a script: (a) **assert every insertion** — `assert s.count(anchor) == 1` (or an explicit `if anchor not in s: raise`) around EACH replacement, so a no-op cannot pass silently; and (b) **read the live body back** — `gh api repos/<o>/<r>/pulls/<n> --jq .body`, then grep it for a NAMED marker unique to each edit (a symbol, a line number, a section heading) BEFORE firing any re-run, because the validator reads the body GitHub is serving, not the file on disk. Two supporting habits close the same class from the other end: put the head SHA and the command INSIDE every evidence fence (`# head <sha> (git rev-parse HEAD)` as the fence's first line) so a paste carries its own provenance instead of depending on the prose around it; and put a NUMBER on every deferred debt (an issue number, a run id, a count) rather than a phrase like "later", so the record says what is owed and to whom.
@@ -4921,6 +4922,21 @@ git-workflow-skill:
                   label of the sign-off comment. An agent NEVER impersonates the operator. (The
                   validator's rulebook `AI_REVIEW_PROMPT` owns the canonical statement; this
                   restates the mandate and references it.)
+
+                  **How and when a sign-off is made.** When a verdict, or a rule such as T4,
+                  requests a maintainer sign-off:
+
+                  1. **Who:** the sign-off is a PR comment posted by a maintainer-set account.
+                     The operator writes it, or an agent writes it ONLY at the operator's
+                     explicit direction and says so in the comment. An agent never posts one on
+                     its own initiative.
+                  2. **When:** the comment is posted, and the PR body updated to cite its
+                     comment id, BEFORE the next push or validator re-run. Then push or re-run
+                     exactly once. One BLOCK that requests a sign-off is expected; a second run
+                     while it is still missing is a violation ("BEFORE ANY UPDATE PUSH", step
+                     (f)).
+                  3. **A PR that is a T4 change from the start:** ask the operator for the
+                     sign-off as soon as the PR exists, rather than waiting for the BLOCK.
 
                   **No R10 class exemption (current project state).** A plugin-library or
                   schema change runs the **full assembled `disposable: true` bed** — there
@@ -6815,7 +6831,8 @@ git-workflow-skill:
                   7. Guardrail / validator-spec edits (a validator's own prompt, a
                      `FORBIDDEN_*` list, a gate) are T4 self-modifying-security changes: they
                      need a maintainer-account sign-off or must be split into their own
-                     signed-off change. Never WEAKEN a marker without pasted proof; prefer
+                     signed-off change. The sign-off is posted BEFORE the next push or re-run,
+                     never after (B2b.1 "How and when a sign-off is made"). Never WEAKEN a marker without pasted proof; prefer
                      strengthening.
                   8. The PR title must match the diff.
                   9. Arm the watcher (`marketplace/scripts/pr_state_watch.sh <owner>/<repo> <pr>`),
