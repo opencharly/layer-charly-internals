@@ -3919,8 +3919,15 @@ git-workflow-skill:
             ### The POISON state — green verdict, still BLOCKED
 
             A branch protection rule requires ALL same-name `validate / validate` check runs on
-            the head to pass, so a COMPLETED earlier FAILURE keeps the PR `BLOCKED` even after a
-            later SUCCESS of the same name — it reads like a verdict BLOCK but is not. Two runs
+            the head to pass, so a COMPLETED earlier run that did not pass keeps the PR `BLOCKED`
+            even after a later SUCCESS of the same name — it reads like a verdict BLOCK but is
+            not. **"Did not pass" is the whole non-passing vocabulary, not just `FAILURE`:
+            `CANCELLED`, `TIMED_OUT`, `STARTUP_FAILURE`, `STALE` and `ACTION_REQUIRED` all block
+            the merge gate the same way.** Measured: `opencharly/opencharly#460` reached PASS with
+            auto-merge armed and did not merge, its head carrying one `success` beside one
+            `cancelled` run — and the tooling that classifies this read the pair as PASS until the
+            classifier was fixed (opencharly/marketplace#442), because it tested `=="FAILURE"` and
+            let every other conclusion fall through. Two runs
             on ONE head produce two such check runs; a `gh workflow run` re-dispatch on the same
             head mints another and can keep the PR stuck. **The capability-free remedy is a
             REST re-run of the failed run** (`gh api -X POST
@@ -5663,13 +5670,15 @@ git-workflow-skill:
                   check's name to the WORST conclusion. A body-only fix does not move the head,
                   so re-dispatching the validator on the SAME head APPENDS a second check-run of
                   the same name beside the earlier one instead of replacing it. The newer
-                  SUCCESS never cancels the older FAILURE. Measured: opencharly/plugin-vm#39 head
+                  SUCCESS never cancels the older non-passing run. Measured: opencharly/plugin-vm#39 head
                   `c9457a9` carried two `validate / validate` runs — failure (auto `pull_request`
                   at 04:40:06) and success (manual `--ref` dispatch at 04:44:11) — and the PR
                   stayed BLOCKED with a PASS verdict.
 
                   **Distinguish it from a verdict BLOCK.** A verdict BLOCK's NEWEST same-name
-                  run is the failure; POISON's newest is SUCCESS with an older failure beneath.
+                  run is the non-passing one; POISON's newest is SUCCESS with an older non-passing
+                  run beneath (a `CANCELLED` run poisons exactly as a `FAILURE` does —
+                  opencharly/opencharly#460).
                   Use `marketplace/scripts/pr_state_watch.sh`, which classifies exactly this and
                   names the shape in its output.
 
