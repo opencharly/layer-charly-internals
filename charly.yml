@@ -226,7 +226,7 @@ agents-skill:
                   | | Claude Code | Codex | Kimi |
                   |---|---|---|---|
                   | Rulebook | `AGENTS.md` | `AGENTS.md` | `AGENTS.md` |
-                  | Skills | plugin manager (`charly-*@charly-plugins`, the opencharly/marketplace repo) | Codex marketplace (`codex plugin marketplace add opencharly/marketplace`; install entries with `codex plugin add <plugin-name>@charly-plugins`) from `.agents/plugins/marketplace.json`; use the AGENTS.md dispatcher and read the selected `<family>/skills/<name>/SKILL.md` when skill descriptions are omitted | kimi plugin (the whole marketplace is one plugin, installed by GitHub URL) / on-demand `Skill` tool; when not in the session listing, `Read` the marketplace repo's `<family>/skills/<name>/SKILL.md` |
+                  | Skills | plugin manager (`charly-*@charly-plugins`, the opencharly/marketplace repo) | On a new profile, register the Codex marketplace with `codex plugin marketplace add opencharly/marketplace`; install entries with `codex plugin add <plugin-name>@charly-plugins`. If `charly-plugins` is already listed by `codex plugin marketplace list`, do not add it again from a different source because Codex rejects a same-name source collision. The catalog is `.agents/plugins/marketplace.json`. Set `[skills] max_context_tokens = 10000` for Codex's documented maximum, then use the AGENTS.md dispatcher and read selected `<family>/skills/<name>/SKILL.md` files for any skill descriptions still omitted | kimi plugin (the whole marketplace is one plugin, installed by GitHub URL) / on-demand `Skill` tool; when not in the session listing, `Read` the marketplace repo's `<family>/skills/<name>/SKILL.md` |
                   | Sub-agents | custom agents (the marketplace's `internals/agents/*.md`, `.claude/agents/`) | fresh native agent threads (`.codex/agents/*.toml` roles, e.g. `pr-validator`) | built-in `coder` / `explore` / `plan` only — no custom subagent registry |
                   | Fresh validator / teammate | sub-agent or team teammate with the agent brief | fresh agent thread with the role toml | a fresh separate `kimi` session (interactive or `kimi -p`) briefed with the agent `.md` by path — context isolation is what makes it independent |
                   | Dynamic workflows | `.claude/workflows/*.js` (run `/<name>`) | re-derived per thread | re-derived per session (no workflow runtime) |
@@ -10005,7 +10005,7 @@ skills-skill:
             1. **Edit the OWNING candy repo's `skill:` entity, then regenerate.** Since the candy
                de-submodule cutover the charly repo owns NO `skill:` entities — each family lives
                in its standalone owning repo (internals → layer-charly-internals (+ layer-charly-
-               internals-extra for strict-policy/vm-spec/agents); build → layer-charly-build;
+               internals-extra for strict-policy/vm-spec); build → layer-charly-build;
                check → layer-charly-check; kubernetes → layer-charly-kubernetes; image →
                layer-charly-image; core → pod-charly-core; automation → pod-charly-automation;
                local → layer-charly-local; pod → layer-charly-pod; hooks/verbs → pod-charly-hooks
@@ -10916,9 +10916,11 @@ marketplace-skill:
 
             ## Per-harness vendoring — the corpus is a CACHE, not a live source
 
-            Codex may shorten or omit skill descriptions when the installed catalog exceeds its
-            skill-description context budget. Use the AGENTS.md Skill Dispatcher to select each
-            required skill, then read its `SKILL.md` by path when it is absent from the session listing.
+            Codex's `skills.max_context_tokens` setting controls the available-skills catalog budget:
+            it defaults to 2% of the model context window and accepts values up to 10,000 tokens.
+            Set `[skills] max_context_tokens = 10000` for this large catalog. The catalog can still
+            exceed that cap, so use the AGENTS.md Skill Dispatcher to select each required skill,
+            then read its `SKILL.md` by path when it is absent from the session listing.
 
             Claude Code clones the marketplace as `charly-plugins`; Codex registers it with
             `codex plugin marketplace add opencharly/marketplace` and installs entries with
