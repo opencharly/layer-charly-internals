@@ -34,7 +34,10 @@ Canonical files:
 ## Build / validate / test
 
 - `charly box validate` at the repo root — the structural check: the manifest
-  must parse and validate at the installed charly.
+  must parse and validate. Before running it, verify `command -v charly` resolves
+  to the `bin/charly` built from the active charly source worktree, and verify
+  `charly version` matches that source. Never validate with the shared host
+  install.
 - The merge gate is the **org-wide** `charly/pr-validator` (required check
   `validate / validate`, defined in `opencharly/.github`); this repo has no
   per-repo candy gate.
