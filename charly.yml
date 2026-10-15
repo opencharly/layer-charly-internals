@@ -233,6 +233,28 @@ agents-skill:
             make the two numbers agree — or re-run it with its inputs materialized. The same
             discipline governs a monitor: a watcher armed over a stale item list reports silence,
             and silence is the very thing it exists to detect.
+
+            ## An assertion's PRESENCE is not its INTEGRITY
+
+            The twin of the principle above, one level lower: **a check that verified the
+            property it was written for, and not the property that mattered.**
+
+            MEASURED. A 70-line rename asserted, line by line, that each line it was about to
+            replace still CONTAINED the anchor it expected — and every assert passed, because
+            every anchor WAS present. One replacement nevertheless dropped a trailing `"` from
+            its line (the original closed the variable reference with a paren and a quote; the
+            replacement wrote the same without the quote), which unbalanced the shell's quoting
+            and made **bash report a syntax error FIFTY LINES AWAY** from the edit. A presence
+            assert cannot see that: presence is an assertion about the OLD text and says nothing
+            about whether the new text is WHOLE. The downstream parser caught it — and only
+            because the same file parses clean at HEAD, which is what made it a recorded error
+            rather than a shipped one.
+
+            **The method consequence, which is the operational half:** when asserting a
+            replacement, assert the NEW text is syntactically whole — parse it, lint it, or
+            compare its byte count — and **prefer a checker that reads MORE context than the edit
+            to one scoped to the edit.** A grep over the line you changed cannot see an
+            unbalanced quote; the shell that has to parse the whole file can.
         references:
             - name: agent-roster
               content: |
