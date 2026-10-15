@@ -3953,6 +3953,28 @@ git-workflow-skill:
             workflow contains no re-dispatch step. A `workflow_dispatch` does NOT land its check on the
             PR head by itself — supply `--ref`.
 
+            ### A body is a DERIVED artefact — four mechanical checks, not care
+
+            The order above gets the body written before the push. **These four checks keep it TRUE**, and they are what actually
+            blocks PRs: in one leg, five verdicts on one PR turned on prose while the code and the schema passed every single time.
+
+            1. **PARSE, DO NOT TRANSCRIBE.** *When the body quotes a machine's output, read the machine's file and extract the field BY
+               KEY — never retype it.* **A parsed substitution cannot drift; a retyped one always can.**
+            2. **EVERY CONTENT COMMIT INVALIDATES A MEASURED BODY.** *An empty `chore(pr): re-trigger` commit moves the HEAD and not the
+               TREE; a content commit moves BOTH — and with them every count, every tree key and every "the diff is N files"
+               statement.* **A tree key is stable only while commits are empty.**
+            3. **EVERY CLAIM ABOUT STATE MUST BE LOCATED IN ITS ARTEFACT — and this includes the ledger, which is not exempt from
+               its own rules.** *A claim written inside a section that TEACHES checking is the worst place to leave one unchecked,
+               because the next reader trusts it precisely because of where it sits.*
+            4. **FIXING A CLAIM MEANS FINDING EVERY INSTANCE OF IT.** *A body-wide claim is a property of the WHOLE body, so its repair
+               is a SWEEP — the same shape as an R5 deletion grep.* **And never write a NEGATIVE claim about the body's own contents
+               (`the only place`, `no other`, `nowhere else`): a positive description cannot be falsified by a later paragraph; a
+               negative one can, and will be.**
+
+            **And name ONE owner consistently.** *If a body says a piece of proof is owed by the consumer and an issue says it is owed
+            here, the two cannot both be the disposition.* **Grep the body for every statement about a responsibility and reconcile
+            them before the push — being scrupulous is not the same as being consistent.**
+
             ### The POISON state — green verdict, still BLOCKED
 
             A branch protection rule requires ALL same-name `validate / validate` check runs on
