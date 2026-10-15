@@ -4087,6 +4087,13 @@ git-workflow-skill:
             **currency** — whether each recorded pin is the value its declared INTENT names, read
             from the REMOTE — is a **first-class mode of the ONE pin verb** (`verb: git-submodules`
             with `mode: currency`), never a second implementation and never a hand-measured table.
+            **That is the CONTRACT this repository is adopting, and the mode is NOT yet in a
+            released binary**: it lands with the pin-contract cutover in the plugin that owns the
+            verb, and this repo's task surface moves onto it in the same cutover. Until both halves
+            land, MEASURE the question rather than assuming a verb answers it — a build that
+            predates the cutover answers `git-submodules: unknown
+            mode "currency"`. The command, the shapes and the states are in
+            `references/pin-intent-and-currency.md`.
             A green `verify` still does NOT answer the currency question — it passes on a tree
             whose submodules are all behind their remotes (measured: five of six `distro-*` were)
             — which is why the pin contract now has its own reference: the intent model and its
@@ -5781,13 +5788,41 @@ git-workflow-skill:
                   #   then diff (name -> submodule path) against `git config -f .gitmodules --get-regexp path`
                   ```
 
-                  Measured on 2026-10-15 by exactly that walk: **438** non-fork non-archived org
-                  repos against **429** `.gitmodules` paths — **20 org repos with no submodule**, of
-                  which **5 are explainable** (`.github`, `opencharly`, `dsh-opencharly`, and two
-                  retired `zz-*` staging repos) and **15 are real gaps** (see the wave plan filed
-                  against `opencharly/opencharly`). A search-API query is NOT a census at this org
-                  size: `gh search repos --owner opencharly` truncates and its `is:archived` filter
-                  does not compose the way a list does.
+                  Measured on 2026-10-15 by exactly that walk. **The two counts are not a
+                  subtraction**, and a coverage claim turns entirely on why:
+
+                  | list | count |
+                  |---|---|
+                  | non-fork non-archived org repos (`gh repo list`, filtered) | **438** |
+                  | `.gitmodules` paths — all top-level; none is nested | **429** |
+                  | distinct repo names in those 429 URLs | **429** |
+
+                  `438 − 429 = 9` is **not** the operation, because those two 429s are different
+                  lists. The differences are exactly the thing a reader must see:
+
+                  - **10 of the pinned repos are NOT among the 438:** 7 forks and 3 archived repos
+                    (`clawsweeper`, `crabbox`, `crabhelm`, `gst-wayland-display`, `lobster`,
+                    `openclaw`, `openclaw-enterprise`, `pi-asciinema` are/contain forks;
+                    `layer-check-tier1-layer`, `pi-asciinema`, `pi-review-action` are archived). They
+                    are pinned DELIBERATELY — the `pi-*` plugin forks exist in the umbrella by
+                    design — so "the pinned set" and "the active org set" are not the same set.
+                  - **ONE path is named after nothing:** `dotgithub` pins `opencharly/.github`. So
+                    the path list and the repo-name list differ by exactly that one spelling: the
+                    path is top-level and well-formed, and its NAME is the only thing wrong with it.
+                  - **19 org repos are named by NO URL at all** — that is the coverage gap, and
+                    **20 org repos have no path named after them**, which is those 19 plus
+                    `.github` (pinned, under the differently-spelled path `dotgithub`).
+
+                  Of the 19, **4 are explainable** — `opencharly` is the umbrella itself;
+                  `dsh-opencharly` carries no `charly.yml`; `plugin-task-zzold-6561` is the RETIRED
+                  predecessor of `plugin-task`, which IS a submodule; `zz-probe3-7319` is an EMPTY
+                  repo with no default branch — and **15 are real gaps** (see the wave plan filed
+                  against `opencharly/opencharly`). **`.github` is NOT one of them**: it is pinned,
+                  and its only defect is the path spelling.
+
+                  A search-API query is NOT a census at this org size: `gh search repos --owner
+                  opencharly` truncates and its `is:archived` filter does not compose the way a
+                  list does.
 
                   **That is the fourth instrument in this surface whose NAME suggests a question it
                   does not answer**, and the pattern is the reason `task map`/`task verify`/currency
@@ -5806,7 +5841,7 @@ git-workflow-skill:
                   |---|---|---|
                   | **STATE** — where is each submodule, on which branch, at which pin? | `charly task map` | a listing, nothing about correctness |
                   | **CONSISTENCY** — does each checkout match the gitlink the umbrella records, and does policy B hold? | `charly task verify`, and its commit-time half `charly task policy-b` | that the tree is internally COHERENT — **not that it is current** |
-                  | **CURRENCY** — is each recorded pin the value its intent names? | `verb: git-submodules` with `mode: currency` (a first-class mode of the SAME verb) | that every pin is at the ref its intent names, or the exact leg order that would get it there — see `references/pin-intent-and-currency.md` |
+                  | **CURRENCY** — is each recorded pin the value its intent names? | the `currency` mode of the ONE pin verb (`verb: git-submodules`) — the mode the pin-contract cutover adds, and **not in a released binary yet** | that every pin is at the ref its intent names, or the exact leg order that would get it there — the contract and its availability are both in `references/pin-intent-and-currency.md` |
 
                   **`charly task verify` passes on a tree whose submodules are behind their
                   remotes.** Measured on the umbrella of 2026-10-15, at the commit that advanced
@@ -5963,6 +5998,17 @@ git-workflow-skill:
                   **`currency` is a first-class mode of the SAME verb**, not a second
                   implementation, and it is the mode that answers "is the umbrella current?".
 
+                  **The mode is the CONTRACT this repository is adopting; it is NOT yet in a
+                  released binary.** It lands with the pin-contract cutover in the plugin that owns
+                  the verb, and this repo's own task surface moves onto it in the SAME cutover —
+                  two halves of one change, producer first. Until both halves land, a released
+                  build answers `git-submodules: unknown mode "currency"`, so a reader who needs
+                  the question answered TODAY must MEASURE it — a table of `<path>: <recorded
+                  gitlink> vs <remote default-branch HEAD>` — and must not assume a verb answers
+                  it. Everything below therefore describes the contract the cutover lands, which is
+                  why the shapes and the states are stated as RULES rather than as a release note
+                  for a version.
+
                   **`currency` reads NO checkout state, and that is deliberate rather than
                   incidental.** It compares the only two objects that can answer the question — the
                   recorded gitlink and the REMOTE — so the index-vs-checkout seam
@@ -6000,6 +6046,13 @@ git-workflow-skill:
                      (`graph depth > 1: … an edge may not point at an edge`). Checking only
                      `pinned_from` leaves the explicit shape unenforced while the schema states the
                      rule generally — which is the one shape a second edge is most likely to take.
+                     **An arm per shape is not the same control as an assertion that a shape cannot
+                     bypass the rule.** THIS rule's control is its shape — one classified graph,
+                     walked over every edge, into which a depth-3 chain cannot be expressed — and
+                     only then is an arm per shape worth writing. The live bed is the other half,
+                     and it is the half that failed: it drove `pin_map` alone, i.e. the shape that was
+                     already guarded, and reached its PASS line without ever exercising the shape the
+                     contract had just introduced.
                   2. **Every leaf must be remote-verifiable.** A leaf is judged against the remote
                      ref, so a leaf no namespace serves is structural (`ref-not-served`), and an
                      edge whose declared source records no gitlink is refused rather than inherited
@@ -6050,9 +6103,15 @@ git-workflow-skill:
 
                   **A green run can therefore never read as "everything is fine".** The count is
                   the first thing in the string, and `0 of <M>` is the only shape that means
-                  current. Measured on the umbrella on 2026-10-15: **10 of 429 pins not current,
-                  419 `cur`**, with the five unreachable `distro-*` pins each reporting
-                  `blocked-by charly:box/<ns> (no ref declared)`.
+                  current. Measured on 2026-10-15 against the REAL umbrella at `96195c1`, with a
+                  charly built from the implementation at `745f6d7`: **14 of 429 pins not current —
+                  `415 cur`, `2 behind`, `4 not-on-the-served-line`, `2 differs (no checkout to
+                  judge ancestry)`, and the five unreachable `distro-*` pins each reporting
+                  `blocked-by charly:box/<ns> (no ref declared)` — 5 of them STRUCTURAL.** The intent
+                  counts reconcile exactly — **423 implicit `upstream:` leaves + 6 `derived-from:`
+                  edges = 429** — and they are IDENTICAL to the counts taken before the round that
+                  changed the depth rule, which is how a reader can see that the change moved the
+                  RULE and not the classification.
 
                   ### The producer-first leg order
 
