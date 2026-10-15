@@ -206,6 +206,19 @@ agents-skill:
               operation, ensure the ledger reflects it, so a later interruption resumes
               from STATE, not memory.
 
+            - **One writer per artefact, and a VERSION GUARD on every read-modify-write.** Two sessions appending to the
+                same ledger or editing the same file is a **lost update**, not a merge: the second writer read a stale
+                version, its write overwrites the first's, and **nothing reports an error** - the surviving artefact is one
+                of the two, chosen by timing. The guard is the write's PRECONDITION: read the artefact **with** its version,
+                and refuse the write if the version moved (a stale-version error IS this guard firing - re-read, rebase the
+                intended change onto the new content, retry). Where no version is exposed, the durable substitute is a
+                **single writer**: one session owns the artefact and the rest hand work over through a coordination
+                comment instead of writing it themselves.
+            - **A status written from memory is a claim about the WRONG MOMENT.** Re-read the artefact before reporting
+                on it. *This is the lost update read one step earlier: the reader held a stale version and reported it as
+                current - and it is the same mechanism that presents downstream as `a concurrent writer presents as a
+                flaky test`.*
+
             The umbrella rulebook states this as a Part II rule (`AGENTS.md`, "Ledger and
             interruption safety") and points here for the detail. Where this guidance
             itself belongs is owned by the sibling `/charly-internals:skills` ("Where
