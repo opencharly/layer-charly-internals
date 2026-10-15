@@ -255,6 +255,31 @@ agents-skill:
             compare its byte count — and **prefer a checker that reads MORE context than the edit
             to one scoped to the edit.** A grep over the line you changed cannot see an
             unbalanced quote; the shell that has to parse the whole file can.
+
+            ## A control whose BASELINE was never established DESTROYS WORK
+
+            The mirror of the two above, and the more dangerous direction: **the first two
+            inflate confidence; this one reverts CORRECT work — and its output looks like
+            diligence.**
+
+            MEASURED. Repairing two truncated lines, the repair was asserted with `node --check`
+            over the whole file — a checker deliberately chosen because it reads MORE context
+            than the edit. It FAILED, and the assert correctly reverted the change: an unusable
+            result is worse than no result. But the same checker fails on `origin/main`'s
+            UNMODIFIED copies too (measured: `rc=1` on both, at a top-level `return`), because
+            those files are FRAGMENTS that were never standalone parses. **So a correct fix was
+            reverted by a test that had never passed on any input at all.** The instrument was
+            never validated against the artefact it was about to judge.
+
+            **The rule:** prefer a checker that reads more context than the edit — **but
+            validate the checker against the UNMODIFIED artefact first**, or a correct change is
+            reverted by a test that never passed.
+
+            And the generalisation, because it is the half the rulebook assumes: **a control
+            must establish TWO things — that it FAILS on the bad input, and that it PASSES on
+            the good one.** The first is R7's "a test that cannot fail is invalid" and is
+            covered at length everywhere; the second is the one nobody writes down, and its
+            failure mode is silent, productive-looking destruction.
         references:
             - name: agent-roster
               content: |
