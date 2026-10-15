@@ -1,15 +1,16 @@
 # AGENTS.md — layer-charly-internals
 
 Standalone candy repo for the `charly-internals` concept candy — it ships no
-install content and owns the `internals` family of `skill:` entities that
-document charly's internal architecture and contributor workflow. The entities
-live in `charly.yml` at the repo root; `candy/plugin-marketplace` regenerates the
-standalone opencharly/marketplace corpus from them.
+install content and owns the `internals` family of skills, which document
+charly's internal architecture and contributor workflow. Each skill's prose is
+authored with the skill itself; `charly.yml` at the repo root carries only the
+routing metadata its consumers read, and `candy/plugin-marketplace` regenerates
+the standalone opencharly/marketplace corpus from the two together.
 
 Canonical files:
 
-- `charly.yml` — the `charly-internals:` concept candy entity plus 20 `skill:`
-  entities (`git-workflow`, `go`, `go-quality`, `plugin`, `skills`,
+- `charly.yml` — the `charly-internals:` concept candy entity plus the routing
+  metadata for its family's 20 skills (`git-workflow`, `go`, `go-quality`, `plugin`, `skills`,
   `marketplace`, `repo-setup`, `agents`, `capabilities`, `install-plan`,
   `egress`, `cutover-policy`, `disposable`, `generate-source`,
   `cloud-init-renderer`, `libvirt-renderer`, `local-infra`, `ovmf`,
@@ -21,7 +22,7 @@ Canonical files:
 
 - `/charly-internals:skills` — the owning skill for this repo's family (skill
   maintenance: where documentation belongs, the projection contract). Load
-  before editing the concept candy or any `skill:` entity.
+  before editing the concept candy or a skill's routing metadata.
 - `/charly-internals:git-workflow` — the landing mechanics (feat/ branch,
   PR-only, the fresh validator, CalVer-at-merge). Load before any git/`gh`
   action.
@@ -43,17 +44,18 @@ Canonical files:
   `validate / validate`, defined in `opencharly/.github`); this repo has no
   per-repo candy gate.
 - The candy is documentation-only: its `plan:` is a `true` no-op plus a `true`
-  `check:` that the skill entities are present and generated into the
-  marketplace. There is no live bed.
+  `check:` standing in for the assertion that the family's skills are present and
+  generated into the marketplace. There is no live bed.
 
 ## Modify this repo
 
-- The `skill:` entities are the projected usage source. Edit them here, never the
-  generated `SKILL.md` in the marketplace corpus; a corpus regeneration
-  (`charly marketplace generate`) projects them.
+- Each skill's prose is the projected usage source. Edit it with the skill, never
+  the generated `SKILL.md` in the marketplace corpus; a corpus regeneration
+  (`charly marketplace generate`) projects the prose and the routing metadata.
 - When charly's internals or contributor workflow changes, update the matching
-  `skill:` entity in the same change so the corpus does not drift.
-- Keep the concept candy's `plan:` no-op; it exists only to carry the entities.
+  skill in the same change so the corpus does not drift.
+- Keep the concept candy's `plan:` no-op; it exists only to carry the family's
+  routing metadata.
 
 ## Landing
 
