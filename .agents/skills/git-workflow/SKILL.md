@@ -32,6 +32,8 @@ validator's own spec.
 
 ## THE BODY-BEFORE-PUSH RULE (the one that bites hardest)
 
+**A body-only round is delivered by a push, not a REST re-run.** A re-run replays the original `pull_request` payload, so it reviews the body the PR was opened with, not the one you just wrote. Measured: a re-run after a body-only edit reported the findings of the run before it.
+
 **Write the WHOLE PR body BEFORE the push.** The validator validates the PR — its
 diff at the branch head, and its body — each time its run is triggered, and it
 fetches the PR LIVE by number. Getting the body final first is the cheapest order:
@@ -109,6 +111,8 @@ workflow contains no re-dispatch step. A `workflow_dispatch` does NOT land its c
 PR head by itself — supply `--ref`.
 
 ### A body is a DERIVED artefact — four mechanical checks, not care
+
+**Read the prose a change ADDS, not only what it MOVES.** A relocation diff shows removals and additions; the additions are new claims and are read as such. Measured: a moved paragraph asserted "30+ direct candies" over a manifest listing 26, and the number did not move with the text.
 
 The order above gets the body written before the push. **These four checks keep it TRUE**, and they are what actually
 blocks PRs: in one leg, five verdicts on one PR turned on prose while the code and the schema passed every single time.
