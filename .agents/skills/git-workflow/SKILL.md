@@ -32,7 +32,8 @@ validator's own spec.
 
 ## THE BODY-BEFORE-PUSH RULE (the one that bites hardest)
 
-**A body-only round is delivered by a push, not a REST re-run.** A re-run replays the original `pull_request` payload, so it reviews the body the PR was opened with, not the one you just wrote. Measured: a re-run after a body-only edit reported the findings of the run before it.
+**Publish the body before you re-run.** A re-run fired before the new body is published reviews whatever is on GitHub at that moment, so the rule is a race rather than an architectural one: the validator fetches the pull request live by number, so a re-run issued after the body is published reads the current text.
+
 
 **Write the WHOLE PR body BEFORE the push.** The validator validates the PR — its
 diff at the branch head, and its body — each time its run is triggered, and it
