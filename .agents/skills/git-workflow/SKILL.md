@@ -32,6 +32,9 @@ validator's own spec.
 
 ## THE BODY-BEFORE-PUSH RULE (the one that bites hardest)
 
+**Publish the body before you re-run.** A re-run fired before the new body is published reviews whatever is on GitHub at that moment, so the rule is a race rather than an architectural one: the validator fetches the pull request live by number, so a re-run issued after the body is published reads the current text.
+
+
 **Write the WHOLE PR body BEFORE the push.** The validator validates the PR — its
 diff at the branch head, and its body — each time its run is triggered, and it
 fetches the PR LIVE by number. Getting the body final first is the cheapest order:
@@ -109,6 +112,8 @@ workflow contains no re-dispatch step. A `workflow_dispatch` does NOT land its c
 PR head by itself — supply `--ref`.
 
 ### A body is a DERIVED artefact — four mechanical checks, not care
+
+**Read the prose a change ADDS, not only what it MOVES.** A relocation diff shows removals and additions; the additions are new claims and are read as such. Measured: a moved paragraph asserted "30+ direct candies" over a manifest listing 26, and the number did not move with the text.
 
 The order above gets the body written before the push. **These four checks keep it TRUE**, and they are what actually
 blocks PRs: in one leg, five verdicts on one PR turned on prose while the code and the schema passed every single time.
