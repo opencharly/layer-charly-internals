@@ -251,11 +251,10 @@ CLOSED set**, uppercase, then sharp prose in proper GitHub Markdown
 | `STATUS` | progress, no authority change | scope ref, your slug, state |
 | `RESOLVED` | the scope is done | merged PR ref + `v<CalVer>` tag |
 
-The legacy labels `BLOCKS` and `UNBLOCKS` are READ, never posted: a coordination
-comment that opens with one is honoured only when it was created strictly BEFORE
-`2026-10-24T00:00:00Z`; on or after that instant it is not a coordination comment
-at all. No tooling accepts a legacy label — the current closed set is the only one
-a coordination comment may open with.
+The set is CLOSED, and it is the whole set: a coordination comment opens with one
+of those nine labels and nothing else. A comment whose first non-blank line is any
+other word is not a coordination comment, so a gate looking for one does not count
+it. The set changes only through a rulebook change, landed like any other.
 
 Rendered example — a claim on a PR:
 
