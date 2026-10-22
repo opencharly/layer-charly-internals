@@ -38,11 +38,11 @@ NEW repository.
   AUTOMATIC coverage ONLY: the org does not attach the required
   `validate / validate` workflow to the repo and does not mint its CalVer tag.
   **It is not a prohibition, and a fork is not a defect.** A fork is a
-  legitimate, actively developed repo here, and it lands on whatever gate it
-  carries:
+  legitimate, actively developed repo here, and it runs its own checks:
   * `openclaw-enterprise` (fork of `openclaw/openclaw-enterprise`) has ZERO
-    branch rules and lands on its own `.github/workflows/ci.yml` — its PR #2
-    merged 2026-10-13 with `CI Required`, `CodeQL` and `QA advisory`, and no
+    branch rules, so no branch check is ENFORCED; its PRs run its own
+    `.github/workflows/ci.yml` and merge on that CI signal — its PR #2 merged
+    2026-10-13 with `CI Required`, `CodeQL` and `QA advisory`, and no
     `validate / validate`;
   * `crabbox` (fork of `openclaw/crabbox`) is excluded from the org-wide
     ruleset but carries its OWN repo-scoped ruleset requiring the SAME
@@ -51,9 +51,10 @@ NEW repository.
   * `gst-wayland-display` (fork, default `stable`) carries its own rules on
     `stable` (including `validate / validate`) and CalVer tags minted
     out-of-band.
-  An exclusion never means "cannot land" or "is junk". What DOES still hold: a
-  NEW repo is created non-fork so it inherits the org gate, and an excluded repo
-  is not tagged or gated by the org automatically.
+  For a LIVE repo, an exclusion never means "cannot land" or "is junk" — the
+  non-landing categories are named below. What DOES still hold: a NEW repo is
+  created non-fork so it inherits the org gate, and an excluded repo is not
+  tagged or gated by the org automatically.
 
 ## What happens automatically on every PR (the landing chain)
 
@@ -149,10 +150,11 @@ category:
   `openclaw/openclaw-enterprise`). Real repos, real PRs, own CI or own ruleset;
   only the org-wide automatic coverage is absent.
 - **A vendored upstream on a non-`main` default** — `pixelflux` (default
-  `av1`): consumed as a pin, not developed through the org's landing chain.
+  `av1`): consumed as a pin, not a landing target.
 - **An artifact-branch sink** — `omarchy-eval-artifacts` (default `runs`): a
-  place to publish run output, never a repo that lands changes.
-- **An archived repo** — `pi-review-action`.
+  branch that receives published output, not a landing target.
+- **An archived repo** — `pi-review-action`: read-only, so GitHub rejects
+  pushes and new PRs.
 
 "No tag expected" is true only of the AUTOMATIC tag: the org mints none for
 these repos, so a CalVer tag you find there was minted out-of-band (measured:
