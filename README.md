@@ -1,19 +1,25 @@
 # charly-internals
 
-The `charly-internals` family — the contributor-facing internals skills.
+The `charly-internals` candy is a **concept candy**: it ships no install content.
+It authors only the `internals` skills that still need to be authored here —
+eleven of them:
 
-The `charly-internals` candy is a **concept candy**: it ships no install content
-and owns the `internals` family of skills that document charly's internal
-architecture and contributor workflow. It currently carries twenty skills:
-`git-workflow`, `go`, `go-quality`, `plugin`, `skills`, `marketplace`,
-`repo-setup`, `agents`, `capabilities`, `install-plan`, `egress`,
-`cutover-policy`, `disposable`, `generate-source`, `cloud-init-renderer`,
-`libvirt-renderer`, `local-infra`, `ovmf`, `root-cause-analyzer`, and
-`vm-deploy-target`. Each skill's prose is authored with the skill itself, and
-`charly.yml` carries the routing metadata its consumers read;
-`candy/plugin-marketplace` regenerates the standalone
-[opencharly/marketplace](https://github.com/opencharly/marketplace) corpus from
-the two together, so the skills are authored here and projected there.
+`agents`, `cutover-policy`, `egress`, `git-workflow`, `go`, `go-quality`,
+`marketplace`, `plugin`, `repo-setup`, `root-cause-analyzer`, and
+`vm-deploy-target`.
+
+The other nine skills of the family have moved beside the code or contract they
+describe, and are authored in those repos:
+
+| Skill | Authored in |
+|---|---|
+| `capabilities`, `cloud-init-renderer`, `generate-source`, `libvirt-renderer`, `local-infra`, `ovmf`, `skills` | [opencharly/sdk](https://github.com/opencharly/sdk) |
+| `disposable`, `install-plan` | [opencharly/spec](https://github.com/opencharly/spec) |
+
+Their address is unchanged — every one still resolves as
+`/charly-internals:<name>` — because `candy/plugin-marketplace` regenerates the
+standalone [opencharly/marketplace](https://github.com/opencharly/marketplace)
+corpus from each authoring repo's own body.
 
 ## What it provides
 
@@ -21,7 +27,7 @@ the two together, so the skills are authored here and projected there.
 |---|---|
 | Layer / candy | `charly-internals` (concept candy) |
 | Install content | none — a `true` no-op `plan:` |
-| Owns | the 20 skills of the `internals` family |
+| Authors | eleven `internals` skills |
 | Projected to | `marketplace/internals/skills/` |
 | Service / port | none |
 
@@ -29,15 +35,32 @@ The rest of the `internals` family is owned by sibling repos:
 `layer-charly-internals-extra` (`strict-policy`, `vm-spec`, and the six agent
 definitions) and `plugin-nerdctl` (`plugin-nerdctl`).
 
+## What is still outstanding
+
+Three of the eleven already have their body in
+[the umbrella](https://github.com/opencharly/opencharly) — `agents`,
+`cutover-policy`, `root-cause-analyzer` — but the umbrella is not yet a source
+in the corpus refs list, so this repo is still where the published corpus reads
+them from. They move once the umbrella is pinned there.
+
+Six have a measured destination repo that does not author them yet — `egress`
+(`plugin-egress`), `go`, `go-quality` and `plugin` (`charly`), `marketplace`
+(`plugin-marketplace`), `vm-deploy-target` (`plugin-deploy-vm`). Their prose
+exists in no other repository, so they cannot be removed from here until each
+destination authors its copy.
+
+`git-workflow` and `repo-setup` are filed as not routable
+(opencharly/opencharly#611): their config home is `opencharly/.github`, which is
+neither a submodule of the umbrella nor a corpus source.
+
 ## How to use it
 
 This repo is consumed as a **skill source**, not as an image layer. Edit a
-skill's prose with the skill — the harness resolves it by name, and
-`charly.yml` holds only the routing metadata; the marketplace regeneration
-projects the two into `/charly-internals:*` pages. To reference the repo directly, compose it in a
-box. A box is a `candy:` node that carries the box's `base:` image and a nested
-`candy:` list of layer refs (the nested `candy:` is the composition list; the
-outer `candy:` is the box body):
+skill's prose in the repo that authors it (the table above), then regenerate the
+corpus. To reference the repo directly, compose it in a box. A box is a
+`candy:` node that carries the box's `base:` image and a nested `candy:` list of
+layer refs (the nested `candy:` is the composition list; the outer `candy:` is
+the box body):
 
 ```yaml
 my-box:
@@ -50,18 +73,17 @@ my-box:
 ## Layout
 
 - `charly.yml` — the `charly-internals:` concept candy entity plus the routing
-  metadata for its family's 20 skills (`git-workflow`, `go`, `go-quality`, `plugin`, `skills`,
-  `marketplace`, `repo-setup`, `agents`, `capabilities`, `install-plan`,
-  `egress`, `cutover-policy`, `disposable`, `generate-source`,
-  `cloud-init-renderer`, `libvirt-renderer`, `local-infra`, `ovmf`,
-  `root-cause-analyzer`, `vm-deploy-target`).
+  metadata for the eleven skills it still authors (`agents`, `cutover-policy`,
+  `egress`, `git-workflow`, `go`, `go-quality`, `marketplace`, `plugin`,
+  `repo-setup`, `root-cause-analyzer`, `vm-deploy-target`).
+- `.agents/skills/` — the bodies of those eleven skills.
 - `.github/workflows/tag-on-merge.yml` — CalVer tag + `CHANGELOG/` on merge.
 - `README.md` — this user overview.
 
 ## Related
 
-- Owning skills: `/charly-internals:git-workflow`,
-  `/charly-internals:skills`, `/charly-internals:marketplace`
+- Owning skills: `/charly-internals:skills` (authored in `opencharly/sdk`),
+  `/charly-internals:git-workflow`, `/charly-internals:marketplace`
 - Authoring reference: `/charly-image:layer`
 - Overflow skills: `opencharly/layer-charly-internals-extra`
 - [`opencharly/marketplace`](https://github.com/opencharly/marketplace) — the projected corpus

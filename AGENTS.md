@@ -1,28 +1,65 @@
 # AGENTS.md — layer-charly-internals
 
-Standalone candy repo for the `charly-internals` concept candy — it ships no
-install content and owns the `internals` family of skills, which document
-charly's internal architecture and contributor workflow. Each skill's prose is
-authored with the skill itself; `charly.yml` at the repo root carries only the
-routing metadata its consumers read, and `candy/plugin-marketplace` regenerates
-the standalone opencharly/marketplace corpus from the two together.
+Standalone candy repo for the `charly-internals` concept candy. It ships no
+install content. It authors only the `internals` skills that still need it here;
+every skill whose mechanism lives in another repo and whose home can publish it
+has moved beside that mechanism, and the map below says where. `charly.yml` at
+the repo root carries routing metadata only, and `candy/plugin-marketplace`
+regenerates the standalone opencharly/marketplace corpus from that metadata plus
+each skill's own file.
 
-Canonical files:
+## Destination map — where each `internals` skill is authored now
 
-- `charly.yml` — the `charly-internals:` concept candy entity plus the routing
-  metadata for its family's 20 skills (`git-workflow`, `go`, `go-quality`, `plugin`, `skills`,
-  `marketplace`, `repo-setup`, `agents`, `capabilities`, `install-plan`,
-  `egress`, `cutover-policy`, `disposable`, `generate-source`,
-  `cloud-init-renderer`, `libvirt-renderer`, `local-infra`, `ovmf`,
-  `root-cause-analyzer`, `vm-deploy-target`).
-- `.github/workflows/tag-on-merge.yml` — CalVer tag + `CHANGELOG/` on merge.
-- `README.md` — user overview only; never agent guidance.
+A skill is authored in the repo that owns the code, plugin, or config it
+describes (umbrella `AGENTS.md` Part II #5). The address does not change when the
+body moves: every row still resolves as `/charly-internals:<name>` in the
+corpus.
+
+| Skill | Authored in | Body |
+|---|---|---|
+| `capabilities` | `opencharly/sdk` | `.agents/skills/capabilities/` |
+| `cloud-init-renderer` | `opencharly/sdk` | `.agents/skills/cloud-init-renderer/` |
+| `generate-source` | `opencharly/sdk` | `.agents/skills/generate-source/` |
+| `libvirt-renderer` | `opencharly/sdk` | `.agents/skills/libvirt-renderer/` |
+| `local-infra` | `opencharly/sdk` | `.agents/skills/local-infra/` |
+| `ovmf` | `opencharly/sdk` | `.agents/skills/ovmf/` |
+| `skills` | `opencharly/sdk` | `.agents/skills/skills/` |
+| `disposable` | `opencharly/spec` | `.agents/skills/disposable/` |
+| `install-plan` | `opencharly/spec` | `.agents/skills/install-plan/` |
+
+Edit those skills in the repo named above, never here, and never in the
+generated `marketplace/<family>/skills/<name>/SKILL.md` projection. Both
+destination repos are DIRECT corpus sources (pinned in
+`marketplace/candy/charly-marketplace/charly.yml`), so the address does not
+change. For eight of the nine the published body does not change either; the
+exception is `generate-source`, whose `sdk` copy already carries corrections the
+carrier copy predates (K-wave's `charly/*` deletions), so the next corpus
+regeneration publishes the newer text.
+
+## What still lives here, and why
+
+Eleven skills keep their body in `.agents/skills/` because moving them now would
+leave their prose unreachable from the corpus:
+
+- `agents`, `cutover-policy`, `root-cause-analyzer` — the body ALREADY exists in
+  the umbrella (`opencharly/opencharly`), but the umbrella is not a corpus
+  source, so this repo is the only source the published corpus reads them from.
+  They move in the same change that pins the umbrella in the corpus refs list,
+  not before it.
+- `egress`, `go`, `go-quality`, `marketplace`, `plugin`, `vm-deploy-target` —
+  each has a measured destination repo (`plugin-egress`, `charly`, `charly`,
+  `plugin-marketplace`, `charly`, `plugin-deploy-vm`) but that repo does not
+  author the skill yet, so the body here is the only copy in the org. Each moves
+  when its destination's shelf lands.
+- `git-workflow`, `repo-setup` — filed as not routable
+  (opencharly/opencharly#611): their config home is `opencharly/.github`, which
+  is not a submodule and not a corpus source.
 
 ## Load these skills first (R0)
 
-- `/charly-internals:skills` — the owning skill for this repo's family (skill
-  maintenance: where documentation belongs, the projection contract). Load
-  before editing the concept candy or a skill's routing metadata.
+- `/charly-internals:skills` — skill maintenance and the authored-content
+  contract (authored in `opencharly/sdk`). Load before editing a skill, this
+  file, or any routing metadata.
 - `/charly-internals:git-workflow` — the landing mechanics (feat/ branch,
   PR-only, the fresh validator, CalVer-at-merge). Load before any git/`gh`
   action.
@@ -35,27 +72,28 @@ Canonical files:
 ## Build / validate / test
 
 - `charly box validate` at the repo root — the structural check: the manifest
-  must parse and validate. Before running it, verify `command -v charly` resolves
-  to the `bin/charly` built from the active charly source worktree, and verify
-  `charly version` matches that source. Run it with `CHARLY_PLUGIN_ONLY=1` so a
-  worktree build does not scan incompatible packaged plugins from `/usr/lib/charly/plugins`.
-  Never validate with the shared host install.
+  must parse, and every `skill:` node's owning candy must resolve a body. Before
+  running it, verify `command -v charly` resolves to the `bin/charly` built from
+  the active charly source worktree, and verify `charly version` matches that
+  source. Run it with `CHARLY_PLUGIN_ONLY=1` so a worktree build does not scan
+  incompatible packaged plugins from `/usr/lib/charly/plugins`. Never validate
+  with the shared host install.
 - The merge gate is the **org-wide** `charly/pr-validator` (required check
   `validate / validate`, defined in `opencharly/.github`); this repo has no
   per-repo candy gate.
-- The candy is documentation-only: its `plan:` is a `true` no-op plus a `true`
-  `check:` standing in for the assertion that the family's skills are present and
-  generated into the marketplace. There is no live bed.
+- The candy is documentation-only: its `plan:` is a `true` no-op, and its
+  `check:` step is a `true` no-op as well. Neither asserts that the skill bodies
+  exist — the body-existence gate is `charly box validate`, which resolves every
+  `skill:` node's owner and file. There is no live bed.
 
 ## Modify this repo
 
-- Each skill's prose is the projected usage source. Edit it with the skill, never
-  the generated `SKILL.md` in the marketplace corpus; a corpus regeneration
-  (`charly marketplace generate`) projects the prose and the routing metadata.
-- When charly's internals or contributor workflow changes, update the matching
-  skill in the same change so the corpus does not drift.
-- Keep the concept candy's `plan:` no-op; it exists only to carry the family's
-  routing metadata.
+- Add or remove a `skill:` node only together with its body: a node whose owning
+  candy has no body fails `charly box validate`.
+- Keep the concept candy's `plan:` a no-op; it exists only to carry the
+  remaining skills' routing metadata.
+- When a skill still authored here gains a reachable home, delete its tree and
+  its node in the same change and update the map above.
 
 ## Landing
 
