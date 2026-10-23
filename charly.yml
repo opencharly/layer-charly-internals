@@ -1,15 +1,19 @@
 charly-internals:
     candy:
         description: |-
-            Concept candy owning the charly-internals contributor skills (go/plugin/agents/skills/cutover/…). Owns its family's `skill:` kind entities (sibling nodes in this file) — the
-            the plugins→candies migration; candy/plugin-marketplace regenerates the marketplace
+            Concept candy carrying the routing metadata for the internals skills that still need it
+            here: `agents`, `cutover-policy` and `root-cause-analyzer` (their bodies already live in
+            the umbrella, which is not yet a corpus source) plus `egress`, `git-workflow`, `go`,
+            `go-quality`, `marketplace`, `plugin`, `repo-setup` and `vm-deploy-target` (no other repo
+            authors them yet). Ships no install content; owns its family's `skill:` kind entities
+            (sibling nodes in this file), and candy/plugin-marketplace regenerates the marketplace
             corpus (the standalone opencharly/marketplace repo) from them.
         plan:
-            - run: this documentation-only candy ships no install content (it carries the family's skill/hook/marketplace entities); validate-satisfying no-op
+            - run: this documentation-only candy ships no install content (it carries the remaining internals family's skill entities); validate-satisfying no-op
               command: "true"
               context:
                 - build
-            - check: the internals concept candy's skill entities are present and generated into the marketplace's internals/skills
+            - check: validate-satisfying no-op — this assertion is NOT performed by the command, the real body-existence gate is `charly box validate`
               id: charly-internals-present
               context:
                 - build
@@ -25,18 +29,6 @@ agents-skill:
             - "Sub-agents / dynamic workflows / agent teams / agent-lifecycle or commit-push gate hooks"
             - "Monitor a subagent's progress / stop a stalled, idle, or looping worker"
             - "Todo ledger / interruption safety / never drop in-flight work across a new instruction"
-capabilities-skill:
-    skill:
-        name: capabilities
-        family: internals
-        owner: charly-internals
-        triggers:
-            - "OCI labels / capabilities contract"
-cloud-init-renderer-skill:
-    skill:
-        name: cloud-init-renderer
-        family: internals
-        owner: charly-internals
 cutover-policy-skill:
     skill:
         name: cutover-policy
@@ -44,13 +36,6 @@ cutover-policy-skill:
         owner: charly-internals
         triggers:
             - "Hard-cutover concerns / rename sweeps"
-disposable-skill:
-    skill:
-        name: disposable
-        family: internals
-        owner: charly-internals
-        triggers:
-            - "Disposable-flag semantics / `disposable: true` authorization / preemptible-flag / `requires_exclusive:` / `charly preempt` / exclusive host-resource arbitration (GPU passthrough contention)"
 egress-skill:
     skill:
         name: egress
@@ -58,13 +43,6 @@ egress-skill:
         owner: charly-internals
         triggers:
             - "Egress config validation \u2014 validating/generating the config files charly WRITES to a system (`candy/plugin-fleet/egress.go`, `ValidateEgress`, the vendored CUE egress schemas in `candy/plugin-egress/egress-schemas/vendor/`, cloud-init/k8s_object/units/ssh_config/libvirt-XML egress)"
-generate-source-skill:
-    skill:
-        name: generate-source
-        family: internals
-        owner: charly-internals
-        triggers:
-            - "`charly box build` / `charly box generate` / Containerfile"
 git-workflow-skill:
     skill:
         name: git-workflow
@@ -87,30 +65,6 @@ go-quality-skill:
         owner: charly-internals
         triggers:
             - "Go code-quality / AGENTS.md-compliance audit / `golangci-lint` / `dupl` / duplication or dead-code check / `.golangci.yml`"
-install-plan-skill:
-    skill:
-        name: install-plan
-        family: internals
-        owner: charly-internals
-        triggers:
-            - "IR / InstallPlan / EmitTarget / OCITarget"
-libvirt-renderer-skill:
-    skill:
-        name: libvirt-renderer
-        family: internals
-        owner: charly-internals
-local-infra-skill:
-    skill:
-        name: local-infra
-        family: internals
-        owner: charly-internals
-        triggers:
-            - "local-target deploy / `target: local` / `host: local` (default) / SSH-host deploys / `user:` / `ssh_arg:`"
-ovmf-skill:
-    skill:
-        name: ovmf
-        family: internals
-        owner: charly-internals
 plugin-skill:
     skill:
         name: plugin
@@ -124,13 +78,6 @@ root-cause-analyzer-skill:
         name: root-cause-analyzer
         family: internals
         owner: charly-internals
-skills-skill:
-    skill:
-        name: skills
-        family: internals
-        owner: charly-internals
-        triggers:
-            - "Skill authoring / skill maintenance / where does this doc content belong"
 vm-deploy-target-skill:
     skill:
         name: vm-deploy-target
