@@ -26,31 +26,46 @@ corpus.
 | `skills` | `opencharly/sdk` | `.agents/skills/skills/` |
 | `disposable` | `opencharly/spec` | `.agents/skills/disposable/` |
 | `install-plan` | `opencharly/spec` | `.agents/skills/install-plan/` |
+| `go` | `opencharly/charly` | `.agents/skills/go/` + `references/` |
+| `go-quality` | `opencharly/charly` | `.agents/skills/go-quality/` |
+| `plugin` | `opencharly/charly` | `.agents/skills/plugin/` + `references/` |
+| `egress` | `opencharly/plugin-egress` | `.agents/skills/egress/` |
+| `marketplace` | `opencharly/plugin-marketplace` | `.agents/skills/marketplace/` |
+| `vm-deploy-target` | `opencharly/plugin-deploy-vm` | `.agents/skills/vm-deploy-target/` |
 
 Edit those skills in the repo named above, never here, and never in the
-generated `marketplace/<family>/skills/<name>/SKILL.md` projection. Both
-destination repos are DIRECT corpus sources (pinned in
-`marketplace/candy/charly-marketplace/charly.yml`), so the address does not
-change. For eight of the nine the published body does not change either; the
-exception is `generate-source`, whose `sdk` copy already carries corrections the
-carrier copy predates (K-wave's `charly/*` deletions), so the next corpus
-regeneration publishes the newer text.
+generated `marketplace/<family>/skills/<name>/SKILL.md` projection. Every moved
+body was copied byte-identically (verified by `sha256` against this repo's
+`main` at the time of the move), and the address does not change: each still
+resolves as `/charly-internals:<name>`.
+
+**Two groups, two different corpus states — do not conflate them.**
+
+- `sdk` and `spec` are DIRECT corpus sources (pinned in
+  `marketplace/candy/charly-marketplace/charly.yml`), so their nine skills are
+  already published FROM those repos. For eight of the nine the published body
+  did not change; the exception is `generate-source`, whose `sdk` copy already
+  carries corrections the carrier copy predated (K-wave's `charly/*` deletions),
+  so the next corpus regeneration publishes the newer text.
+- `charly`, `plugin-egress`, `plugin-marketplace` and `plugin-deploy-vm` are NOT
+  corpus sources yet — none of the four has a refs-list entry. Their six skills
+  are therefore still SERVED from this repo's pinned tag (`v2026.296.1336`),
+  whose tree holds the bodies; nothing a harness loads changes until the refs leg
+  pins those four repos. That leg also has to resolve a duplicate: `charly-version`
+  is authored in `charly` (since charly#1036, `family: core`) AND in
+  `pod-charly-core` (owner `charly-core`, the copy the corpus serves today, with
+  identical content), so adding `charly` as a source must settle which repo owns
+  that address.
 
 ## What still lives here, and why
 
-Eleven skills keep their body in `.agents/skills/` because moving them now would
-leave their prose unreachable from the corpus:
+Five skills keep their body in `.agents/skills/`:
 
 - `agents`, `cutover-policy`, `root-cause-analyzer` — the body ALREADY exists in
   the umbrella (`opencharly/opencharly`), but the umbrella is not a corpus
   source, so this repo is the only source the published corpus reads them from.
   They move in the same change that pins the umbrella in the corpus refs list,
   not before it.
-- `egress`, `go`, `go-quality`, `marketplace`, `plugin`, `vm-deploy-target` —
-  each has a measured destination repo (`plugin-egress`, `charly`, `charly`,
-  `plugin-marketplace`, `charly`, `plugin-deploy-vm`) but that repo does not
-  author the skill yet, so the body here is the only copy in the org. Each moves
-  when its destination's shelf lands.
 - `git-workflow`, `repo-setup` — filed as not routable
   (opencharly/opencharly#611): their config home is `opencharly/.github`, which
   is not a submodule and not a corpus source.
