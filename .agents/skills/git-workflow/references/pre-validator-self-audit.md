@@ -131,10 +131,9 @@ both body-only, and neither covered by classes 1-5.
    Measured: the umbrella PR's `--all` band was one second narrower than the
    branch's own samples, and the fix was the union of the samples, re-derived on
    the tree that carries the band. **And a LIVE reading is not a figure at
-   all:** a count that changes as the org's remotes advance (two runs of the
-   same binary on the same day reported 13 and then 10 pins behind) belongs in
-   the verb's own output, stamped there — never in prose, where it is already
-   stale by the time it is read.
+   all:** a count that changes as the org's remotes advance belongs in the verb's
+   own output, stamped there — never in prose, where it is already stale by the
+   time it is read.
 4. Account for EVERY applicable rule (the repo's numbered rules AND R1–R10)
    with a one-line `HOW` or `N/A — <reason>`; never a bare `N/A.`
 5. NEVER surface a failure you cannot own. Either fix it (including the coupled

@@ -299,10 +299,10 @@ MODE=currency` answers the question and names the states. Do not MEASURE the
 question by hand: a hand-built `<path>: <recorded gitlink> vs <remote
 default-branch HEAD>` table is the second implementation of a verb that already
 answers it, and it drifts. Do not quote its COUNTS here either — they are a LIVE
-reading of the org's remotes, not a constant: two runs of the same binary on the
-same day reported 13 and then 10 pins behind, because the remotes advanced in
-between. The command, the shapes and the states are in
-`references/pin-intent-and-currency.md`.
+reading of the org's remotes, not a constant, so the same binary can report a
+different number an hour later than it did before. The rule and its reason are in
+`references/pin-intent-and-currency.md`, which owns the contract; the command,
+the shapes and the states are there too.
 A green `verify` still does NOT answer the currency question — it passes on a tree
 whose submodules are all behind their remotes (measured: five of six `distro-*` were)
 — which is why the pin contract now has its own reference: the intent model and its

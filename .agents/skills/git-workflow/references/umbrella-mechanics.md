@@ -79,7 +79,8 @@ list does.
 **That is the fourth instrument in this surface whose NAME suggests a question it
 does not answer**, and the pattern is the reason `task map`/`task verify`/currency
 had to be separated in the first place: `task map` is STATE (a listing, not a
-correctness claim), `task verify` is CONSISTENCY (green on a tree 25 pins behind),
+correctness claim), `task verify` is CONSISTENCY (green on a tree whose pins are
+behind their remotes),
 `prune MODE=report` is a parameter the task does not accept while the DEFAULT is
 already the report, and `org-map` is README-vs-`.gitmodules`. **Read every one of
 them by what its output compares, never by its name.**
@@ -103,13 +104,12 @@ the REMOTE), so the index-vs-checkout seam cannot arise in it. **Do not measure
 the question by hand**: a hand-built `<path>: <recorded gitlink> vs <remote
 default-branch HEAD>` table is the second implementation of a verb that already
 answers it, and it drifts. **Do not quote its COUNTS here either** — the counts
-are a LIVE reading of the org's remotes, not a constant: two runs of the same
-binary on the same day reported 13 and then 10 pins behind, because the remotes
-advanced in between. The counts belong to the verb's output, where they are
-stamped; the guidance carries the COMMAND and the SHAPE. The earlier claim — that
-the mode was not yet shipped in a released binary, and that a reader "must MEASURE
-it" — was FALSE, and it is deleted here and in `SKILL.md` and in
-`references/pin-intent-and-currency.md`, which carried the same sentence.
+are a LIVE reading of the org's remotes, not a constant; the rule and its reason
+are in `references/pin-intent-and-currency.md`, which owns the contract. The
+earlier claim — that the mode was not yet available to a reader, and that the
+answer had to be measured by hand — was FALSE, and it is deleted here and in
+`SKILL.md` and in `references/pin-intent-and-currency.md`, which carried the same
+sentence.
 
 **`charly task verify` passes on a tree whose submodules are behind their
 remotes.** Measured on the umbrella of 2026-10-15, at the commit that advanced

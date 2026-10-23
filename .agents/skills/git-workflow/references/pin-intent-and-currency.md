@@ -16,10 +16,11 @@ the producer-first leg order. So a reader who needs the question answered does
 NOT MEASURE it by hand: a hand-built `<path>: <recorded gitlink> vs <remote
 default-branch HEAD>` table is a second implementation of a verb that already
 answers it, and it drifts. Nor should the guidance carry the verb's COUNTS:
-they are a LIVE reading of the org's remotes, not a constant — two runs of the
-same binary on the same day reported 13 and then 10 pins behind, because the
-remotes advanced in between. Everything below states the shapes and the states
-as RULES rather than as a release note for a version.
+they are a LIVE reading of the org's remotes, not a constant — the same binary
+can report a different number an hour later than it did before, because the
+remotes advanced in between. The counts belong to the verb's own output, where
+they are stamped. Everything below states the shapes and the states as RULES
+rather than as a release note for a version.
 
 **`currency` reads NO checkout state, and that is deliberate rather than
 incidental.** It compares the only two objects that can answer the question — the
