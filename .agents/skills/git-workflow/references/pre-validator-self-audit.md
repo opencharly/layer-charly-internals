@@ -67,12 +67,12 @@ both body-only, and neither covered by classes 1-5.
    measurements is checked against the measurements, not against the code.** A
    body that says "eight mutations" beside a paste that shows seven is the same
    failure as a quantifier with no command behind it — the number is a claim
-   about a RUN, and the run is what decides it. Measured: the umbrella PR's body
-   quoted the gate's arm count (eight) while pasting the DEFAULT run (seven);
-   the eighth is guarded by `if (samples)`, so it never executes in the default
-   mode. Both numbers were true of their own runs, and the body paired them as
-   though they were one. Count the arms the pasted output shows, and quote the
-   mode you pasted.
+   about a RUN, and the run is what decides it. Measured 2026-10-22: the umbrella
+   PR `opencharly/opencharly#591`'s round-6 body quoted the gate's arm count (eight)
+   while pasting the DEFAULT run (seven); the eighth is guarded by `if (samples)`,
+   so it never executes in the default mode. Both numbers were true of their own
+   runs, and the body paired them as though they were one. Count the arms the
+   pasted output shows, and quote the mode you pasted.
 
 ## The preflight (run BEFORE the first push)
 
@@ -128,12 +128,12 @@ both body-only, and neither covered by classes 1-5.
    reading that names what it was measured on. **A band that a sample has
    outgrown is a defect in the BAND, not in the sample** — the honest band is
    the union of the samples, and it is re-derived on the tree that carries it.
-   Measured: the umbrella PR's `--all` band was one second narrower than the
-   branch's own samples, and the fix was the union of the samples, re-derived on
-   the tree that carries the band. **And a LIVE reading is not a figure at
-   all:** a count that changes as the org's remotes advance belongs in the verb's
-   own output, stamped there — never in prose, where it is already stale by the
-   time it is read.
+   Measured 2026-10-23: the umbrella PR `opencharly/opencharly#591`'s `--all` band
+   was one second narrower than the branch's own samples, and the fix was the union
+   of the samples, re-derived on the tree that carries the band. **And a LIVE
+   reading is not a figure at all:** a count that changes as the org's remotes
+   advance belongs in the verb's own output, stamped there — never in prose, where
+   it is already stale by the time it is read.
 4. Account for EVERY applicable rule (the repo's numbered rules AND R1–R10)
    with a one-line `HOW` or `N/A — <reason>`; never a bare `N/A.`
 5. NEVER surface a failure you cannot own. Either fix it (including the coupled

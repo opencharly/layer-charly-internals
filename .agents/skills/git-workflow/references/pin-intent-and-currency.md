@@ -74,7 +74,7 @@ current.**
 **Those two rules are the whole difference from the consistency contract this
 replaces.** A contract that is satisfiable at BOTH ends while both ends are stale
 is not a currency contract, it is a mirror — which is exactly how policy B held
-while five of the six `distro-*` pins were behind their own `main`.
+while the `distro-*` pins were behind their own `main`.
 
 ### The states, and what each obliges
 

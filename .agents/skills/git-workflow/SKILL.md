@@ -304,7 +304,8 @@ different number an hour later than it did before. The rule and its reason are i
 `references/pin-intent-and-currency.md`, which owns the contract; the command,
 the shapes and the states are there too.
 A green `verify` still does NOT answer the currency question — it passes on a tree
-whose submodules are all behind their remotes (measured: five of six `distro-*` were)
+whose submodules are all behind their remotes (measured 2026-10-15; the `distro-*`
+reading is in `references/umbrella-mechanics.md`)
 — which is why the pin contract now has its own reference: the intent model and its
 two structural rules, the states and what each obliges, and the producer-first leg
 order are in `references/pin-intent-and-currency.md`. `charly task hooks` installs the
