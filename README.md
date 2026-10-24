@@ -1,19 +1,18 @@
 # charly-internals
 
-The `charly-internals` candy is a **concept candy**: it ships no install content.
-It authors only the `internals` skills that still need to be authored here —
-two of them:
+> **RETIRED.** This repo authors no skill any more. It is archived once its drain
+> tag is minted; everything below is the destination map, kept so a reader who
+> lands here knows where the prose went.
 
-`git-workflow` and `repo-setup`.
-
-The other eighteen skills of the family have moved beside the code, plugin or
-contract they describe, and are authored in those repos:
+The `charly-internals` candy is a **concept candy**: it ships no install content
+and carries no `skill:` node. All twenty `internals` skills have moved beside the
+code, plugin, contract or config they describe, and are authored in those repos:
 
 | Skill | Authored in |
 |---|---|
 | `capabilities`, `cloud-init-renderer`, `generate-source`, `libvirt-renderer`, `local-infra`, `ovmf`, `skills` | [opencharly/sdk](https://github.com/opencharly/sdk) |
 | `disposable`, `install-plan` | [opencharly/spec](https://github.com/opencharly/spec) |
-| `agents`, `cutover-policy`, `root-cause-analyzer` | [opencharly/opencharly](https://github.com/opencharly/opencharly) |
+| `agents`, `cutover-policy`, `git-workflow`, `repo-setup`, `root-cause-analyzer` | [opencharly/opencharly](https://github.com/opencharly/opencharly) |
 | `go`, `go-quality`, `plugin` | [opencharly/charly](https://github.com/opencharly/charly) |
 | `egress` | [opencharly/plugin-egress](https://github.com/opencharly/plugin-egress) |
 | `marketplace` | [opencharly/plugin-marketplace](https://github.com/opencharly/plugin-marketplace) |
@@ -24,14 +23,21 @@ Their address is unchanged — every one still resolves as
 standalone [opencharly/marketplace](https://github.com/opencharly/marketplace)
 corpus from each authoring repo's own body.
 
-`sdk`, `spec` and the umbrella are corpus sources, so their twelve skills publish
-from those repos today — the umbrella's three (`agents`, `cutover-policy`,
-`root-cause-analyzer`) since
-[marketplace#567](https://github.com/opencharly/marketplace/pull/567) pinned it
-at `v2026.296.2254`. The three plugin repos and `charly` are **not** sources yet,
-so the six skills of `charly`, `plugin-egress`, `plugin-marketplace` and
-`plugin-deploy-vm` are still SERVED from this repo's pinned tag until the corpus
-refs list pins those four; nothing a harness loads changes in a move itself.
+`git-workflow` and `repo-setup` are the two whose described config lives in
+[opencharly/.github](https://github.com/opencharly/.github) — the org ruleset and
+the required `charly-pr-validator` workflow. That repo holds neither a
+`charly.yml` nor an `.agents/` tree, so it can be neither a skill host nor a
+corpus source, and the umbrella is the only place a consumer can reach them from.
+That is the deliberate exception in the umbrella's `AGENTS.md` Part II #5,
+recorded in
+[opencharly/opencharly#611](https://github.com/opencharly/opencharly/issues/611).
+
+`sdk`, `spec`, the umbrella, `charly` and the three plugin repos are corpus
+sources, so their eighteen skills publish from those repos today. The two this
+repo drained last publish from the umbrella **once the refs leg lands**: the
+refs list still pins this repo at `v2026.297.0301`, whose tree holds both, and
+that ref is dropped in the same PR that advances the umbrella pin to a tag
+carrying them.
 
 ## What it provides
 
@@ -39,8 +45,8 @@ refs list pins those four; nothing a harness loads changes in a move itself.
 |---|---|
 | Layer / candy | `charly-internals` (concept candy) |
 | Install content | none — a `true` no-op `plan:` |
-| Authors | two `internals` skills |
-| Projected to | `marketplace/internals/skills/` |
+| Authors | no skill — retired (the map above says where each one went) |
+| Projected to | nothing; the corpus is generated from the authoring repos |
 | Service / port | none |
 
 The rest of the `internals` family is owned by sibling repos:
@@ -49,55 +55,30 @@ definitions) and `plugin-nerdctl` (`plugin-nerdctl`).
 
 ## What is still outstanding
 
-`git-workflow` and `repo-setup` are filed as not routable
-([opencharly/opencharly#611](https://github.com/opencharly/opencharly/issues/611)):
-their config home is `opencharly/.github`, which is neither a submodule of the
-umbrella nor a corpus source. They are the reason this repo cannot be archived
-yet.
-
-The three skills that used to be authored here as a second copy — `agents`,
-`cutover-policy`, `root-cause-analyzer` — are DRAINED: the umbrella authors them
-and the corpus publishes them from there.
-
-The six skills that used to be outstanding here — `egress` (`plugin-egress`),
-`go`, `go-quality` and `plugin` (`charly`), `marketplace` (`plugin-marketplace`),
-`vm-deploy-target` (`plugin-deploy-vm`) — are DRAINED too: each destination
-authors its copy. What remains for them is the corpus refs leg: pin those four
-repos in `marketplace/candy/charly-marketplace/charly.yml`, so the published
-corpus reads them from their new homes instead of this repo's tag. **This repo's
-pin cannot advance before that leg lands** — it is the only corpus source those
-six have, and `charly` cannot be pinned at all while
-`sdk/candywalk`'s `acceptedRef` refuses `github.com/opencharly/charly` by design.
+Nothing in this repo. One leg remains in another repo: the
+[opencharly/marketplace](https://github.com/opencharly/marketplace) refs list must
+drop this repo's pin and advance the umbrella's, so the corpus reads
+`git-workflow` and `repo-setup` from the umbrella instead of from this repo's
+`v2026.297.0301` tag.
 
 ## How to use it
 
-This repo is consumed as a **skill source**, not as an image layer. Edit a
-skill's prose in the repo that authors it (the table above), then regenerate the
-corpus. To reference the repo directly, compose it in a box. A box is a
-`candy:` node that carries the box's `base:` image and a nested `candy:` list of
-layer refs (the nested `candy:` is the composition list; the outer `candy:` is
-the box body):
-
-```yaml
-my-box:
-  candy:                  # the box body (an IMAGE is a `candy:` node carrying `base:`)
-    base: fedora          # the box's base image
-    candy:                # the box's composition list
-      - '@github.com/opencharly/layer-charly-internals:v2026.271.1802'
-```
+Do not consume this repo. Read a skill from the repo that authors it (the table
+above), and load it as `/charly-internals:<name>` from the generated corpus.
 
 ## Layout
 
-- `charly.yml` — the `charly-internals:` concept candy entity plus the routing
-  metadata for the two skills it still authors (`git-workflow`, `repo-setup`).
-- `.agents/skills/` — the bodies of those two skills.
+- `charly.yml` — the `charly-internals:` concept candy entity. It carries no
+  `skill:` node.
 - `.github/workflows/tag-on-merge.yml` — CalVer tag + `CHANGELOG/` on merge.
 - `README.md` — this user overview.
 
 ## Related
 
 - Owning skills: `/charly-internals:skills` (authored in `opencharly/sdk`),
-  `/charly-internals:git-workflow`, `/charly-internals:marketplace`
+  `/charly-internals:git-workflow` and `/charly-internals:repo-setup` (authored in
+  the umbrella), `/charly-internals:marketplace` (authored in
+  `opencharly/plugin-marketplace`)
 - Authoring reference: `/charly-image:layer`
 - Overflow skills: `opencharly/layer-charly-internals-extra`
 - [`opencharly/marketplace`](https://github.com/opencharly/marketplace) — the projected corpus

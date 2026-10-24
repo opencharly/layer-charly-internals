@@ -1,36 +1,21 @@
 charly-internals:
     candy:
         description: |-
-            Concept candy carrying the routing metadata for the two internals skills that still need
-            it here: `git-workflow` and `repo-setup` (filed as not routable — opencharly/opencharly#611
-            — because their config home, opencharly/.github, is not a corpus source). Every other
-            skill of the family is authored beside the mechanism it documents: `agents`,
-            `cutover-policy` and `root-cause-analyzer` are DRAINED to the umbrella, which is a DIRECT
-            corpus source and publishes them. Ships no install content; owns its family's `skill:`
-            kind entities (sibling nodes in this file), and candy/plugin-marketplace regenerates the
-            marketplace corpus (the standalone opencharly/marketplace repo) from them.
+            Concept candy carrying NO skill entity: every one of the `internals` family's skills is
+            authored in the repo that owns the code, plugin, or config it describes, and this repo is
+            retired (opencharly/opencharly#611, AGENTS.md Part II #5). `agents`, `cutover-policy`,
+            `root-cause-analyzer`, `git-workflow` and `repo-setup` are DRAINED to the umbrella, which
+            is a DIRECT corpus source and publishes them; the rest were drained to `sdk`, `spec` and
+            their plugin repos earlier (opencharly/layer-charly-internals#142). Ships no install
+            content, and candy/plugin-marketplace regenerates the marketplace corpus (the standalone
+            opencharly/marketplace repo) from the owning repos' own files.
         plan:
-            - run: this documentation-only candy ships no install content (it carries the remaining internals family's skill entities); validate-satisfying no-op
+            - run: this documentation-only candy ships no install content and carries no skill entity; validate-satisfying no-op
               command: "true"
               context:
                 - build
-            - check: validate-satisfying no-op — this assertion is NOT performed by the command, the real body-existence gate is `charly box validate`
+            - check: validate-satisfying no-op — this assertion is NOT performed by the command, and this candy owns no `skill:` node, so no body exists for it to resolve; the structural gate is `charly box validate`
               id: charly-internals-present
               context:
                 - build
               command: "true"
-git-workflow-skill:
-    skill:
-        name: git-workflow
-        family: internals
-        owner: charly-internals
-        triggers:
-            - "Git/`gh` workflow \u2014 `feat/` branch, commit, PR-only landing (NO direct push to main), branch protection, the `pr-validator` fresh-evaluator gate, native auto-merge + tag-on-merge CalVer-at-merge, worktree, sync-to-upstream, branch/worktree prune, cross-repo R10 landing"
-repo-setup-skill:
-    skill:
-        name: repo-setup
-        family: internals
-        owner: charly-internals
-        triggers:
-            - "Set up a new repository in the opencharly org (required workflows, ruleset, auto-merge, CalVer tags)"
-            - "How the org ruleset / dotgithub workflows / native auto-merge / tag-on-merge CalVer work"
