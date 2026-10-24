@@ -196,14 +196,19 @@ both body-only, and neither covered by classes 1-5.
     umbrella PR `opencharly/opencharly#591`'s branch carried three published
     merge commits with no `Assisted-by:` trailer — one per review round's
     catch-up merge — and the gap surfaced only when the history was re-read by
-    hand. List the range's trailer-less commits with
-    `git rev-list origin/<branch>..HEAD | while read -r c; do git log -1 --format='%B' "$c" | grep -q '^Assisted-by:' || git log -1 --format='%H %p%n%s%n%b' "$c"; done`
+    hand. The range is the PR's BASE branch's head to this branch's head —
+    `origin/<base>..HEAD`, where `<base>` is the branch this PR merges INTO
+    (`origin/main` in the common case) — so it covers every commit the branch
+    contributes, INCLUDING the catch-up merges it pulls in from the base. Read
+    it with
+    `git rev-list origin/<base>..HEAD | while read -r c; do git log -1 --format='%B' "$c" | grep -q '^Assisted-by:' || git log -1 --format='%H %p%n%s%n%b' "$c"; done`
     — each commit it names owes the trailer, unless it is a merge whose message
     you did not write; the rule and that one exemption are in the org rulebook's
     *AI Attribution* section. A commit you wrote that still owes the trailer
     carries it BEFORE the push: amend it while it is local, and never rewrite a
     published commit — a published gap is reported on the issue, not rewritten
-    (R6).
+    (R6). **Run it over YOUR OWN head and over THAT range:** a range you chose
+    yourself proves a different range's commits, not the ones you are pushing.
 
 ## The mechanical half — `scripts/pr_body_lint.py`
 
