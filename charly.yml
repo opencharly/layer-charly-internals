@@ -3,10 +3,10 @@ charly-internals:
         description: |-
             Concept candy carrying NO skill entity: every one of the `internals` family's skills is
             authored in the repo that owns the code, plugin, or config it describes, and this repo is
-            retired (opencharly/opencharly#611, AGENTS.md Part II #5). `agents`, `cutover-policy`,
-            `root-cause-analyzer`, `git-workflow` and `repo-setup` are DRAINED to the umbrella, which
-            is a DIRECT corpus source and publishes them; the rest were drained to `sdk`, `spec`,
-            `charly` and their plugin repos earlier (opencharly/layer-charly-internals#142). Ships no
+            retired (opencharly/opencharly#611, AGENTS.md Part II #5). The other eighteen were drained
+            earlier — nine to `sdk`/`spec` (opencharly/layer-charly-internals#139), six to `charly` and
+            the three plugin repos (#142), three to the umbrella (#143) — and this change drains the
+            last two, `git-workflow` and `repo-setup`, to the umbrella, a DIRECT corpus source. Ships no
             install content, and candy/plugin-marketplace regenerates the marketplace corpus (the
             standalone opencharly/marketplace repo) from the owning repos' own files.
         plan:

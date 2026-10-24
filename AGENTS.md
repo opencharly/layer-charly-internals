@@ -49,10 +49,12 @@ after the move (opencharly/opencharly#617 stopped it restating the coordination
 closed set) — the umbrella's text is the authored one, and the copy removed here
 was its stale twin.
 
-**Every one of the twenty is now DRAINED**, in two waves: the first
-(`opencharly/layer-charly-internals#142`) moved twelve to `sdk`, `spec`, the
-umbrella, `charly` and three plugin repos; the second moves the last two
-(`git-workflow`, `repo-setup`) to the umbrella.
+**Every one of the twenty is now DRAINED**, in four waves, and the counts add up:
+`#139` moved the **nine** that `opencharly/sdk` (7) and `opencharly/spec` (2)
+author; `#142` moved the **six** that `charly` (3) and the three plugin repos (3)
+author; `#143` moved **three** — `agents`, `cutover-policy`,
+`root-cause-analyzer` — to the umbrella; and this change moves the last **two**,
+`git-workflow` and `repo-setup`, to the umbrella. 9 + 6 + 3 + 2 = 20.
 
 **What the corpus serves now, and what is still owed.** `sdk`, `spec`,
 `opencharly/opencharly`, `charly`, `plugin-egress`, `plugin-marketplace` and
