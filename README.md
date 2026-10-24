@@ -2,18 +2,18 @@
 
 The `charly-internals` candy is a **concept candy**: it ships no install content.
 It authors only the `internals` skills that still need to be authored here —
-five of them:
+two of them:
 
-`agents`, `cutover-policy`, `git-workflow`, `repo-setup`, and
-`root-cause-analyzer`.
+`git-workflow` and `repo-setup`.
 
-The other fifteen skills of the family have moved beside the code, plugin or
+The other eighteen skills of the family have moved beside the code, plugin or
 contract they describe, and are authored in those repos:
 
 | Skill | Authored in |
 |---|---|
 | `capabilities`, `cloud-init-renderer`, `generate-source`, `libvirt-renderer`, `local-infra`, `ovmf`, `skills` | [opencharly/sdk](https://github.com/opencharly/sdk) |
 | `disposable`, `install-plan` | [opencharly/spec](https://github.com/opencharly/spec) |
+| `agents`, `cutover-policy`, `root-cause-analyzer` | [opencharly/opencharly](https://github.com/opencharly/opencharly) |
 | `go`, `go-quality`, `plugin` | [opencharly/charly](https://github.com/opencharly/charly) |
 | `egress` | [opencharly/plugin-egress](https://github.com/opencharly/plugin-egress) |
 | `marketplace` | [opencharly/plugin-marketplace](https://github.com/opencharly/plugin-marketplace) |
@@ -24,12 +24,14 @@ Their address is unchanged — every one still resolves as
 standalone [opencharly/marketplace](https://github.com/opencharly/marketplace)
 corpus from each authoring repo's own body.
 
-`sdk` and `spec` are already corpus sources, so their nine skills publish from
-those repos today. The three plugin repos and `charly` are **not** sources yet,
+`sdk`, `spec` and the umbrella are corpus sources, so their twelve skills publish
+from those repos today — the umbrella's three (`agents`, `cutover-policy`,
+`root-cause-analyzer`) since
+[marketplace#567](https://github.com/opencharly/marketplace/pull/567) pinned it
+at `v2026.296.2254`. The three plugin repos and `charly` are **not** sources yet,
 so the six skills of `charly`, `plugin-egress`, `plugin-marketplace` and
 `plugin-deploy-vm` are still SERVED from this repo's pinned tag until the corpus
-refs list pins those four and advances this one; nothing a harness loads changes
-in the move itself.
+refs list pins those four; nothing a harness loads changes in a move itself.
 
 ## What it provides
 
@@ -37,7 +39,7 @@ in the move itself.
 |---|---|
 | Layer / candy | `charly-internals` (concept candy) |
 | Install content | none — a `true` no-op `plan:` |
-| Authors | five `internals` skills |
+| Authors | two `internals` skills |
 | Projected to | `marketplace/internals/skills/` |
 | Service / port | none |
 
@@ -47,23 +49,25 @@ definitions) and `plugin-nerdctl` (`plugin-nerdctl`).
 
 ## What is still outstanding
 
-Three of the five already have their body in
-[the umbrella](https://github.com/opencharly/opencharly) — `agents`,
-`cutover-policy`, `root-cause-analyzer` — but the umbrella is not yet a source
-in the corpus refs list, so this repo is still where the published corpus reads
-them from. They move once the umbrella is pinned there.
-
 `git-workflow` and `repo-setup` are filed as not routable
-(opencharly/opencharly#611): their config home is `opencharly/.github`, which is
-neither a submodule of the umbrella nor a corpus source.
+([opencharly/opencharly#611](https://github.com/opencharly/opencharly/issues/611)):
+their config home is `opencharly/.github`, which is neither a submodule of the
+umbrella nor a corpus source. They are the reason this repo cannot be archived
+yet.
+
+The three skills that used to be authored here as a second copy — `agents`,
+`cutover-policy`, `root-cause-analyzer` — are DRAINED: the umbrella authors them
+and the corpus publishes them from there.
 
 The six skills that used to be outstanding here — `egress` (`plugin-egress`),
 `go`, `go-quality` and `plugin` (`charly`), `marketplace` (`plugin-marketplace`),
-`vm-deploy-target` (`plugin-deploy-vm`) — are DRAINED: each destination authors
-its copy, byte-identically. What remains for them is the corpus refs leg: pin
-those four repos in `marketplace/candy/charly-marketplace/charly.yml` and advance
-this repo's pin, so the published corpus reads them from their new homes instead
-of this repo's tag.
+`vm-deploy-target` (`plugin-deploy-vm`) — are DRAINED too: each destination
+authors its copy. What remains for them is the corpus refs leg: pin those four
+repos in `marketplace/candy/charly-marketplace/charly.yml`, so the published
+corpus reads them from their new homes instead of this repo's tag. **This repo's
+pin cannot advance before that leg lands** — it is the only corpus source those
+six have, and `charly` cannot be pinned at all while
+`sdk/candywalk`'s `acceptedRef` refuses `github.com/opencharly/charly` by design.
 
 ## How to use it
 
@@ -85,9 +89,8 @@ my-box:
 ## Layout
 
 - `charly.yml` — the `charly-internals:` concept candy entity plus the routing
-  metadata for the five skills it still authors (`agents`, `cutover-policy`,
-  `git-workflow`, `repo-setup`, `root-cause-analyzer`).
-- `.agents/skills/` — the bodies of those five skills.
+  metadata for the two skills it still authors (`git-workflow`, `repo-setup`).
+- `.agents/skills/` — the bodies of those two skills.
 - `.github/workflows/tag-on-merge.yml` — CalVer tag + `CHANGELOG/` on merge.
 - `README.md` — this user overview.
 
