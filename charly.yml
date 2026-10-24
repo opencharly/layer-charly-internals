@@ -1,12 +1,12 @@
 charly-internals:
     candy:
         description: |-
-            Concept candy carrying the routing metadata for the internals skills that still need it
-            here: `agents`, `cutover-policy` and `root-cause-analyzer` (their bodies already live in
-            the umbrella, which is not yet a corpus source) plus `git-workflow` and `repo-setup`
-            (filed as not routable — opencharly/opencharly#611 — because their config home,
-            opencharly/.github, is not a corpus source). Every other skill of the family is authored
-            beside the mechanism it documents. Ships no install content; owns its family's `skill:`
+            Concept candy carrying the routing metadata for the two internals skills that still need
+            it here: `git-workflow` and `repo-setup` (filed as not routable — opencharly/opencharly#611
+            — because their config home, opencharly/.github, is not a corpus source). Every other
+            skill of the family is authored beside the mechanism it documents: `agents`,
+            `cutover-policy` and `root-cause-analyzer` are DRAINED to the umbrella, which is a DIRECT
+            corpus source and publishes them. Ships no install content; owns its family's `skill:`
             kind entities (sibling nodes in this file), and candy/plugin-marketplace regenerates the
             marketplace corpus (the standalone opencharly/marketplace repo) from them.
         plan:
@@ -19,24 +19,6 @@ charly-internals:
               context:
                 - build
               command: "true"
-agents-skill:
-    skill:
-        name: agents
-        family: internals
-        owner: charly-internals
-        triggers:
-            - "Verify a cutover by running the R10 beds (drive `charly check run <bed>`)"
-            - "Evaluate/audit a deployment config (image or deploy, yours)"
-            - "Sub-agents / dynamic workflows / agent teams / agent-lifecycle or commit-push gate hooks"
-            - "Monitor a subagent's progress / stop a stalled, idle, or looping worker"
-            - "Todo ledger / interruption safety / never drop in-flight work across a new instruction"
-cutover-policy-skill:
-    skill:
-        name: cutover-policy
-        family: internals
-        owner: charly-internals
-        triggers:
-            - "Hard-cutover concerns / rename sweeps"
 git-workflow-skill:
     skill:
         name: git-workflow
@@ -44,11 +26,6 @@ git-workflow-skill:
         owner: charly-internals
         triggers:
             - "Git/`gh` workflow \u2014 `feat/` branch, commit, PR-only landing (NO direct push to main), branch protection, the `pr-validator` fresh-evaluator gate, native auto-merge + tag-on-merge CalVer-at-merge, worktree, sync-to-upstream, branch/worktree prune, cross-repo R10 landing"
-root-cause-analyzer-skill:
-    skill:
-        name: root-cause-analyzer
-        family: internals
-        owner: charly-internals
 repo-setup-skill:
     skill:
         name: repo-setup

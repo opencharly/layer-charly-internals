@@ -26,6 +26,9 @@ corpus.
 | `skills` | `opencharly/sdk` | `.agents/skills/skills/` |
 | `disposable` | `opencharly/spec` | `.agents/skills/disposable/` |
 | `install-plan` | `opencharly/spec` | `.agents/skills/install-plan/` |
+| `agents` | `opencharly/opencharly` | `.agents/skills/agents/` + `references/` |
+| `cutover-policy` | `opencharly/opencharly` | `.agents/skills/cutover-policy/` |
+| `root-cause-analyzer` | `opencharly/opencharly` | `.agents/skills/root-cause-analyzer/` |
 | `go` | `opencharly/charly` | `.agents/skills/go/` + `references/` |
 | `go-quality` | `opencharly/charly` | `.agents/skills/go-quality/` |
 | `plugin` | `opencharly/charly` | `.agents/skills/plugin/` + `references/` |
@@ -37,38 +40,52 @@ Edit those skills in the repo named above, never here, and never in the
 generated `marketplace/<family>/skills/<name>/SKILL.md` projection. Every moved
 body was copied byte-identically (verified by `sha256` against this repo's
 `main` at the time of the move), and the address does not change: each still
-resolves as `/charly-internals:<name>`.
+resolves as `/charly-internals:<name>`. The one exception to byte-identity is
+`agents/references/hooks-and-lifecycle.md`, whose umbrella copy was CORRECTED
+after the move (opencharly/opencharly#617 stopped it restating the coordination
+closed set) — the umbrella's text is the authored one, and the copy removed here
+was its stale twin.
 
 **Two groups, two different corpus states — do not conflate them.**
 
-- `sdk` and `spec` are DIRECT corpus sources (pinned in
-  `marketplace/candy/charly-marketplace/charly.yml`), so their nine skills are
-  already published FROM those repos. For eight of the nine the published body
-  did not change; the exception is `generate-source`, whose `sdk` copy already
-  carries corrections the carrier copy predated (K-wave's `charly/*` deletions),
-  so the next corpus regeneration publishes the newer text.
+- `sdk`, `spec` and `opencharly/opencharly` are DIRECT corpus sources (pinned in
+  `marketplace/candy/charly-marketplace/charly.yml`), so their skills are
+  already published FROM those repos. The umbrella is pinned at
+  `v2026.296.2254` (opencharly/marketplace#567), so its three — `agents`,
+  `cutover-policy`, `root-cause-analyzer` — are published from the umbrella's
+  own bodies, not from this repo's copies. That is why this repo drains them.
 - `charly`, `plugin-egress`, `plugin-marketplace` and `plugin-deploy-vm` are NOT
-  corpus sources yet — none of the four has a refs-list entry. Their six skills
-  are therefore still SERVED from this repo's pinned tag (`v2026.296.1336`),
-  whose tree holds the bodies; nothing a harness loads changes until the refs leg
-  pins those four repos. That leg also has to resolve a duplicate: `charly-version`
-  is authored in `charly` (since charly#1036, `family: core`) AND in
-  `pod-charly-core` (owner `charly-core`, the copy the corpus serves today, with
-  identical content), so adding `charly` as a source must settle which repo owns
-  that address.
+  corpus sources — none of the four has a refs-list entry. Their six skills are
+  therefore still SERVED from this repo's pinned tag
+  (`layer-charly-internals:v2026.296.1907`), whose tree holds all of them;
+  nothing a harness loads changes until the refs leg pins those four repos.
+  That leg must also settle a duplicate: `charly-version` is authored in `charly`
+  (since charly#1036, `family: core`) AND in `pod-charly-core` (owner
+  `charly-core`, the copy the corpus serves today, with identical content), so
+  adding `charly` as a source must settle which repo owns that address.
+
+**Advancing this repo's refs-list pin past a drain drops skills, and today it
+does so silently.** This repo's pin (`v2026.296.1907`) is the only CORPUS source
+that still publishes the six skills the first drain moved out — `egress`, `go`,
+`go-quality`, `marketplace`, `plugin`, `vm-deploy-target` — because none of the
+repos that now author them is a refs-list entry. Advancing the pin past a drain
+therefore stops serving all six, and three of them cannot be recovered at all
+yet: `sdk/candywalk`'s `acceptedRef` refuses `github.com/opencharly/charly` by
+design, so `charly` cannot be a corpus source until that changes. The pin stays
+where it is until then.
 
 ## What still lives here, and why
 
-Five skills keep their body in `.agents/skills/`:
+Two skills keep their body in `.agents/skills/`:
 
-- `agents`, `cutover-policy`, `root-cause-analyzer` — the body ALREADY exists in
-  the umbrella (`opencharly/opencharly`), but the umbrella is not a corpus
-  source, so this repo is the only source the published corpus reads them from.
-  They move in the same change that pins the umbrella in the corpus refs list,
-  not before it.
 - `git-workflow`, `repo-setup` — filed as not routable
   (opencharly/opencharly#611): their config home is `opencharly/.github`, which
   is not a submodule and not a corpus source.
+
+`agents`, `cutover-policy` and `root-cause-analyzer` are DRAINED: the umbrella is
+a corpus source, so it both authors and publishes them, and this repo's copies
+were only a second copy. This repo therefore cannot be archived yet — it still
+holds the two above.
 
 ## Load these skills first (R0)
 
