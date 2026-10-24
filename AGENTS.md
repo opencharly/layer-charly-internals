@@ -1,12 +1,13 @@
 # AGENTS.md — layer-charly-internals
 
-Standalone candy repo for the `charly-internals` concept candy. It ships no
-install content. It authors only the `internals` skills that still need it here;
-every skill whose mechanism lives in another repo and whose home can publish it
-has moved beside that mechanism, and the map below says where. `charly.yml` at
-the repo root carries routing metadata only, and `candy/plugin-marketplace`
-regenerates the standalone opencharly/marketplace corpus from that metadata plus
-each skill's own file.
+**This repo is RETIRED.** It authors no skill: every one of the `internals`
+family's skills is authored in the repo that owns the code, plugin, or config it
+describes (umbrella `AGENTS.md` Part II #5), and the last two — `git-workflow` and
+`repo-setup`, whose config home `opencharly/.github` cannot author skills — are
+DRAINED to the umbrella, which is a DIRECT corpus source and publishes them
+(opencharly/opencharly#611). The repo is archived once its drain tag is minted;
+the destination map below is kept so a reader who lands here knows where the
+prose went.
 
 ## Destination map — where each `internals` skill is authored now
 
@@ -28,6 +29,8 @@ corpus.
 | `install-plan` | `opencharly/spec` | `.agents/skills/install-plan/` |
 | `agents` | `opencharly/opencharly` | `.agents/skills/agents/` + `references/` |
 | `cutover-policy` | `opencharly/opencharly` | `.agents/skills/cutover-policy/` |
+| `git-workflow` | `opencharly/opencharly` | `.agents/skills/git-workflow/` + `references/` |
+| `repo-setup` | `opencharly/opencharly` | `.agents/skills/repo-setup/` |
 | `root-cause-analyzer` | `opencharly/opencharly` | `.agents/skills/root-cause-analyzer/` |
 | `go` | `opencharly/charly` | `.agents/skills/go/` + `references/` |
 | `go-quality` | `opencharly/charly` | `.agents/skills/go-quality/` |
@@ -40,58 +43,36 @@ Edit those skills in the repo named above, never here, and never in the
 generated `marketplace/<family>/skills/<name>/SKILL.md` projection. Every moved
 body was copied byte-identically (verified by `sha256` against this repo's
 `main` at the time of the move), and the address does not change: each still
-resolves as `/charly-internals:<name>`. The one exception to byte-identity is
+resolves as `/charly-internals:<name>`. One exception to byte-identity is
 `agents/references/hooks-and-lifecycle.md`, whose umbrella copy was CORRECTED
 after the move (opencharly/opencharly#617 stopped it restating the coordination
 closed set) — the umbrella's text is the authored one, and the copy removed here
 was its stale twin.
 
-**Two groups, two different corpus states — do not conflate them.**
+**Every one of the twenty is now DRAINED**, in four waves, and the counts add up:
+`#139` moved the **nine** that `opencharly/sdk` (7) and `opencharly/spec` (2)
+author; `#142` moved the **six** that `charly` (3) and the three plugin repos (3)
+author; `#143` moved **three** — `agents`, `cutover-policy`,
+`root-cause-analyzer` — to the umbrella; and this change moves the last **two**,
+`git-workflow` and `repo-setup`, to the umbrella. 9 + 6 + 3 + 2 = 20.
 
-- `sdk`, `spec` and `opencharly/opencharly` are DIRECT corpus sources (pinned in
-  `marketplace/candy/charly-marketplace/charly.yml`), so their skills are
-  already published FROM those repos. The umbrella is pinned at
-  `v2026.296.2254` (opencharly/marketplace#567), so its three — `agents`,
-  `cutover-policy`, `root-cause-analyzer` — are published from the umbrella's
-  own bodies, not from this repo's copies. That is why this repo drains them.
-- `charly`, `plugin-egress`, `plugin-marketplace` and `plugin-deploy-vm` are NOT
-  corpus sources — none of the four has a refs-list entry. Their six skills are
-  therefore still SERVED from this repo's pinned tag
-  (`layer-charly-internals:v2026.296.1907`), whose tree holds all of them;
-  nothing a harness loads changes until the refs leg pins those four repos.
-  That leg must also settle a duplicate: `charly-version` is authored in `charly`
-  (since charly#1036, `family: core`) AND in `pod-charly-core` (owner
-  `charly-core`, the copy the corpus serves today, with identical content), so
-  adding `charly` as a source must settle which repo owns that address.
-
-**Advancing this repo's refs-list pin past a drain drops skills, and today it
-does so silently.** This repo's pin (`v2026.296.1907`) is the only CORPUS source
-that still publishes the six skills the first drain moved out — `egress`, `go`,
-`go-quality`, `marketplace`, `plugin`, `vm-deploy-target` — because none of the
-repos that now author them is a refs-list entry. Advancing the pin past a drain
-therefore stops serving all six, and three of them cannot be recovered at all
-yet: `sdk/candywalk`'s `acceptedRef` refuses `github.com/opencharly/charly` by
-design, so `charly` cannot be a corpus source until that changes. The pin stays
-where it is until then.
-
-## What still lives here, and why
-
-Two skills keep their body in `.agents/skills/`:
-
-- `git-workflow`, `repo-setup` — filed as not routable
-  (opencharly/opencharly#611): their config home is `opencharly/.github`, which
-  is not a submodule and not a corpus source.
-
-`agents`, `cutover-policy` and `root-cause-analyzer` are DRAINED: the umbrella is
-a corpus source, so it both authors and publishes them, and this repo's copies
-were only a second copy. This repo therefore cannot be archived yet — it still
-holds the two above.
+**What the corpus serves now, and what is still owed.** `sdk`, `spec`,
+`opencharly/opencharly`, `charly`, `plugin-egress`, `plugin-marketplace` and
+`plugin-deploy-vm` are all DIRECT sources in
+`marketplace/candy/charly-marketplace/charly.yml`, so their eighteen skills are
+published from the repos that author them. The two this change drains are NOT yet
+published from the umbrella: that refs list still pins this repo at
+`v2026.297.0301`, whose tree holds both. Dropping this ref while advancing the
+umbrella pin to a tag that carries them is the refs leg — one PR in
+`opencharly/marketplace`, landing after this repo's drain tag. Until it lands the
+corpus keeps serving this repo's copies, so nothing a harness loads changes in
+the drain itself.
 
 ## Load these skills first (R0)
 
 - `/charly-internals:skills` — skill maintenance and the authored-content
-  contract (authored in `opencharly/sdk`). Load before editing a skill, this
-  file, or any routing metadata.
+  contract (authored in `opencharly/sdk`). Load before editing a skill or any
+  routing metadata.
 - `/charly-internals:git-workflow` — the landing mechanics (feat/ branch,
   PR-only, the fresh validator, CalVer-at-merge). Load before any git/`gh`
   action.
@@ -114,18 +95,19 @@ holds the two above.
   `validate / validate`, defined in `opencharly/.github`); this repo has no
   per-repo candy gate.
 - The candy is documentation-only: its `plan:` is a `true` no-op, and its
-  `check:` step is a `true` no-op as well. Neither asserts that the skill bodies
-  exist — the body-existence gate is `charly box validate`, which resolves every
-  `skill:` node's owner and file. There is no live bed.
+  `check:` step is a `true` no-op as well. Neither asserts anything — the candy
+  owns no `skill:` node now, so there is no body for a check to resolve, and the
+  structural gate is `charly box validate`. There is no live bed.
 
 ## Modify this repo
 
-- Add or remove a `skill:` node only together with its body: a node whose owning
-  candy has no body fails `charly box validate`.
-- Keep the concept candy's `plan:` a no-op; it exists only to carry the
-  remaining skills' routing metadata.
-- When a skill still authored here gains a reachable home, delete its tree and
-  its node in the same change and update the map above.
+- **Don't.** It is retired; a change belongs in the repo that now authors the
+  skill (the table above).
+- A `skill:` node and its body are removed or added together: a node whose owning
+  candy has no body fails `charly box validate`. That is exactly the arm this
+  repo's own drain proved, per name.
+- The concept candy keeps a `true` no-op `plan:` and a `true` no-op `check:` so
+  the manifest still parses and validates; neither step is an assertion.
 
 ## Landing
 
