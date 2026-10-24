@@ -5,10 +5,10 @@ charly-internals:
             authored in the repo that owns the code, plugin, or config it describes, and this repo is
             retired (opencharly/opencharly#611, AGENTS.md Part II #5). `agents`, `cutover-policy`,
             `root-cause-analyzer`, `git-workflow` and `repo-setup` are DRAINED to the umbrella, which
-            is a DIRECT corpus source and publishes them; the rest were drained to `sdk`, `spec` and
-            their plugin repos earlier (opencharly/layer-charly-internals#142). Ships no install
-            content, and candy/plugin-marketplace regenerates the marketplace corpus (the standalone
-            opencharly/marketplace repo) from the owning repos' own files.
+            is a DIRECT corpus source and publishes them; the rest were drained to `sdk`, `spec`,
+            `charly` and their plugin repos earlier (opencharly/layer-charly-internals#142). Ships no
+            install content, and candy/plugin-marketplace regenerates the marketplace corpus (the
+            standalone opencharly/marketplace repo) from the owning repos' own files.
         plan:
             - run: this documentation-only candy ships no install content and carries no skill entity; validate-satisfying no-op
               command: "true"
